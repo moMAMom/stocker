@@ -21,7 +21,7 @@ export const getAllPortfolios = asyncHandler(async (req: Request, res: Response)
   const result = await portfolioService.getAllPortfolios(pageNum, limitNum);
 
   res.json({
-    status: 'success',
+    success: true,
     data: result.data,
     pagination: result.pagination,
   });
@@ -73,7 +73,7 @@ export const createPortfolioEntry = asyncHandler(async (req: Request, res: Respo
   const result = await portfolioService.createPortfolioEntry(portfolioIdNum, input);
 
   res.status(201).json({
-    status: 'success',
+    success: true,
     data: result,
     message: 'ポートフォリオエントリを作成しました。',
   });
@@ -141,7 +141,7 @@ export const updatePortfolioEntry = asyncHandler(async (req: Request, res: Respo
   const result = await portfolioService.updatePortfolioEntry(entryIdNum, input);
 
   res.json({
-    status: 'success',
+    success: true,
     data: result,
     message: 'ポートフォリオエントリを更新しました。',
   });
@@ -162,7 +162,7 @@ export const deletePortfolioEntry = asyncHandler(async (req: Request, res: Respo
   const result = await portfolioService.deletePortfolioEntry(entryIdNum);
 
   res.json({
-    status: 'success',
+    success: true,
     data: result,
     message: 'ポートフォリオエントリを削除しました。',
   });

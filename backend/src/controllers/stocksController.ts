@@ -28,7 +28,7 @@ export const getAllStocks = asyncHandler(async (req: Request, res: Response) => 
   const result = await stocksService.getAllStocks(filter, pageNum, limitNum);
 
   res.json({
-    status: 'success',
+    success: true,
     data: result.data,
     pagination: result.pagination,
   });
@@ -49,7 +49,7 @@ export const getStockById = asyncHandler(async (req: Request, res: Response) => 
   const result = await stocksService.getStockById(idNum);
 
   res.json({
-    status: 'success',
+    success: true,
     data: result,
   });
 });
@@ -80,7 +80,7 @@ export const createStock = asyncHandler(async (req: Request, res: Response) => {
   const result = await stocksService.createStock(input);
 
   res.status(201).json({
-    status: 'success',
+    success: true,
     data: result,
     message: '銘柄を作成しました。',
   });
@@ -124,7 +124,7 @@ export const updateStock = asyncHandler(async (req: Request, res: Response) => {
   const result = await stocksService.updateStock(idNum, input);
 
   res.json({
-    status: 'success',
+    success: true,
     data: result,
     message: '銘柄を更新しました。',
   });
@@ -145,9 +145,52 @@ export const deleteStock = asyncHandler(async (req: Request, res: Response) => {
   const result = await stocksService.deleteStock(idNum);
 
   res.json({
-    status: 'success',
+    success: true,
     data: result,
     message: '銘柄を削除しました。',
+  });
+});
+
+/**
+ * POST /api/stocks/batch/import
+ * 複数銘柄を一括登録
+ * 
+ * Request Body:
+ * [
+ *   { symbol: "1234", name: "企業A", sector: "日本株", market: "TSE" },
+ *   { symbol: "5678", name: "企業B", sector: "日本株", market: "TSE" }
+ * ]
+ */
+export const batchCreateStocks = asyncHandler(async (req: Request, res: Response) => {
+  const stocks = req.body;
+
+  if (!Array.isArray(stocks) || stocks.length === 0) {
+    throw new AppError('銘柄データは空でない配列である必要があります。', 400);
+  }
+
+  // バリデーション
+  const validatedStocks = stocks.map((stock, index) => {
+    if (!stock.symbol || typeof stock.symbol !== 'string' || stock.symbol.trim().length === 0) {
+      throw new AppError(`インデックス ${index} の銘柄シンボルが無効です。`, 400);
+    }
+    if (!stock.name || typeof stock.name !== 'string' || stock.name.trim().length === 0) {
+      throw new AppError(`インデックス ${index} の銘柄名が無効です。`, 400);
+    }
+
+    return {
+      symbol: stock.symbol.trim(),
+      name: stock.name.trim(),
+      sector: stock.sector ? String(stock.sector).trim() : undefined,
+      market: stock.market ? String(stock.market).trim() : 'TSE',
+    };
+  });
+
+  const result = await stocksService.batchCreateStocks(validatedStocks);
+
+  res.status(201).json({
+    success: true,
+    data: result,
+    message: `${result.created}件の銘柄を登録しました。`,
   });
 });
 
@@ -157,4 +200,5 @@ export default {
   createStock,
   updateStock,
   deleteStock,
+  batchCreateStocks,
 };

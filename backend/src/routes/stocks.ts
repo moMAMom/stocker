@@ -17,6 +17,9 @@ router.get('/:id', stocksController.getStockById);
 // T025: POST /api/stocks - 新規銘柄追加
 router.post('/', stocksController.createStock);
 
+// 一括登録 - 複数銘柄を一度に登録
+router.post('/batch/import', stocksController.batchCreateStocks);
+
 // T027: PUT /api/stocks/:id - 銘柄情報更新
 router.put('/:id', stocksController.updateStock);
 

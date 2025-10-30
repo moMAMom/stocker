@@ -1,15 +1,36 @@
 # プロジェクト進捗
 
 **作成日　25/10/30**
-**更新日　25/10/30 17:30**
+**更新日　25/10/30 19:47**
 
 ## 完了タスク
 
-### フェーズ 1-4：完了 ✅
+### フェーズ 1-5：完了 ✅
 
 すべてのタスク完了済み
 
-### フェーズ 5：統合テスト・最適化・デプロイ ⏳ 進行中
+### 🔧 重要な修正（2025-10-30）
+
+#### API レスポンス形式の統一修正
+
+**問題**: バックエンドの API レスポンスが一貫性を欠いていた
+
+- `getAllStocks` など: `{ status: 'success', data: [...], pagination: {...} }`
+- フロントエンド期待値: `{ success: true, data: [...], pagination: {...} }`
+
+**影響**: フロントエンドで `response.success` チェックが常に失敗 → 銘柄が表示されない
+
+**修正内容**:
+
+- ✅ `backend/src/controllers/stocksController.ts` - すべてのエンドポイントで `status` → `success` に統一
+- ✅ `backend/src/controllers/analysisController.ts` - AppError 引数順修正 + レスポンス形式統一
+- ✅ `backend/src/controllers/portfolioController.ts` - レスポンス形式統一
+- ✅ Docker イメージ再ビルド（`--no-cache`）
+- ✅ 全サービス再起動
+
+**検証結果**: ✅ API が `success: true` を返すようになり、フロントエンドで銘柄一覧が表示される
+
+### フェーズ 5：統合テスト・最適化・デプロイ ✅ 完了
 
 - [x] **T063** E2Eテスト実装完了（Playwright）
   - `frontend/playwright.config.ts` 設定ファイル作成

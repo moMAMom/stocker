@@ -286,10 +286,64 @@ export async function deleteStock(id: number) {
   }
 }
 
+/**
+ * 複数銘柄を一括作成
+ */
+export async function batchCreateStocks(stocks: CreateStockInput[]) {
+  try {
+    let created = 0;
+    const results = [];
+
+    for (const stock of stocks) {
+      try {
+        // シンボルの重複チェック
+        const existing = await prisma.stock.findUnique({
+          where: { symbol: stock.symbol },
+        });
+
+        if (existing) {
+          logger.warn(`⚠️ シンボル ${stock.symbol} は既に存在します。スキップします。`);
+          continue;
+        }
+
+        // 銘柄を作成
+        const newStock = await prisma.stock.create({
+          data: {
+            symbol: stock.symbol,
+            name: stock.name,
+            sector: stock.sector,
+            market: stock.market || 'TSE',
+          },
+        });
+
+        results.push(newStock);
+        created++;
+      } catch (err) {
+        logger.error(`❌ シンボル ${stock.symbol} の作成失敗: ${err instanceof Error ? err.message : err}`);
+        // エラーが発生しても他の銘柄の処理は続行
+      }
+    }
+
+    logger.info(`✅ ${created}件の銘柄を一括作成しました。`);
+
+    return {
+      created,
+      total: stocks.length,
+      skipped: stocks.length - created,
+      data: results,
+    };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    logger.error(`❌ 銘柄一括作成失敗: ${error instanceof Error ? error.message : error}`);
+    throw new AppError('銘柄の一括作成に失敗しました。', 500);
+  }
+}
+
 export default {
   getAllStocks,
   getStockById,
   createStock,
   updateStock,
   deleteStock,
+  batchCreateStocks,
 };

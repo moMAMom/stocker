@@ -3,6 +3,9 @@ FROM node:18-alpine
 # 作業ディレクトリを設定
 WORKDIR /app
 
+# システムパッケージをインストール（OpenSSL を含む）
+RUN apk add --no-cache openssl libssl3
+
 # パッケージファイルをコピー
 COPY package*.json ./
 
