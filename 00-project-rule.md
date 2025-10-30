@@ -1,7 +1,7 @@
 # プロジェクトルール
 
 **作成日　25/10/30**
-**更新日　25/10/30**
+**更新日　25/10/30 15:00**
 
 ## 1. ファイル・フォルダ構造
 
@@ -22,6 +22,10 @@ PayPay/
 │   │   ├── services/            # ビジネスロジック
 │   │   ├── routes/              # ルート定義
 │   │   ├── middleware/          # ミドルウェア
+│   │   │   ├── errorHandler.ts  # エラーハンドリング（AppError、asyncHandler）
+│   │   │   ├── validator.ts     # リクエスト検証（validateRequest、schemas）
+│   │   │   ├── corsConfig.ts    # CORS 設定（getCorsConfig）
+│   │   │   └── requestLogger.ts # ロギング（requestLogger、performanceLogger）
 │   │   ├── models/              # データモデル
 │   │   └── utils/               # ユーティリティ関数
 │   ├── prisma/
@@ -86,6 +90,13 @@ PayPay/
 | `MACD_FAST` | `number` | MACD 短期 EMA（デフォルト: 12） |
 | `MACD_SLOW` | `number` | MACD 長期 EMA（デフォルト: 26） |
 | `MACD_SIGNAL` | `number` | MACD シグナルライン（デフォルト: 9） |
+| `AppError` | `class` | カスタムエラークラス（statusCode、message、details） |
+| `asyncHandler` | `function` | 非同期エラーハンドリングラッパー |
+| `validateRequest` | `function` | リクエスト検証ミドルウェアファクトリー |
+| `schemas` | `object` | 共通バリデーションスキーマ（stock、analysisResult、portfolio、portfolioEntry） |
+| `corsOptions` | `CorsOptions` | CORS 設定オプション |
+| `requestLogger` | `function` | リクエスト/レスポンスロギングミドルウェア |
+| `performanceLogger` | `function` | パフォーマンスログミドルウェア |
 
 ## 3. ファイル命名規則
 

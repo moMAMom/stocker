@@ -7,6 +7,9 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import logger from './utils/logger';
+import { errorHandler, asyncHandler, AppError } from './middleware/errorHandler';
+import { requestLogger, performanceLogger } from './middleware/requestLogger';
+import { getCorsConfig } from './middleware/corsConfig';
 
 // 環境変数を読み込む
 dotenv.config();
@@ -19,16 +22,15 @@ const PORT = process.env.API_PORT || 3000;
 // ========================================
 
 // CORS 設定
-app.use(
-  cors({
-    origin: process.env.NODE_ENV === 'development' ? '*' : ['http://localhost:5173'],
-    credentials: true,
-  })
-);
+app.use(cors(getCorsConfig()));
 
 // JSON パーサー
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// ロギングミドルウェア
+app.use(requestLogger);
+app.use(performanceLogger);
 
 // ========================================
 // ルート定義
@@ -61,13 +63,7 @@ app.use((_req: Request, res: Response) => {
 });
 
 // グローバルエラーハンドラー
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  logger.error('Unhandled error:', err);
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'サーバーエラーが発生しました。',
-  });
-});
+app.use(errorHandler);
 
 // ========================================
 // サーバー起動
@@ -78,4 +74,6 @@ app.listen(PORT, () => {
   logger.info(`📚 API ドキュメント: http://localhost:${PORT}/api-docs`);
 });
 
+// エクスポート
+export { asyncHandler, AppError };
 export default app;
