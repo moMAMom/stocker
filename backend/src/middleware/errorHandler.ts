@@ -12,12 +12,15 @@ import logger from '../utils/logger';
 // ========================================
 
 export class AppError extends Error {
-  constructor(
-    public statusCode: number,
-    public message: string,
-    public details?: Record<string, any>
-  ) {
+  statusCode: number;
+  message: string;
+  details?: Record<string, any>;
+
+  constructor(message: string, statusCode: number = 500, details?: Record<string, any>) {
     super(message);
+    this.statusCode = statusCode;
+    this.message = message;
+    this.details = details;
     Object.setPrototypeOf(this, AppError.prototype);
   }
 }

@@ -9,8 +9,8 @@ import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
-from analyzer import TechnicalAnalyzer
-from backtest import Backtester
+from .analyzer import TechnicalAnalyzer
+from .backtest import Backtester
 import requests
 from datetime import datetime
 
@@ -58,6 +58,22 @@ def analyze_stock(ticker: str):
                 "error": "Failed to analyze stock",
                 "ticker": ticker
             }), 400
+
+        # 【新規追加】バックエンドに分析結果を保存
+        try:
+            save_response = requests.post(
+                f"{BACKEND_URL}/api/analysis/save",
+                json={
+                    "ticker": ticker,
+                    "analysis": result
+                },
+                timeout=10
+            )
+            if save_response.status_code != 201:
+                logger.warning(f"Failed to save analysis to backend: {save_response.text}")
+        except Exception as save_error:
+            logger.error(f"Error saving analysis to backend: {str(save_error)}")
+            # ここでは処理を続行（分析結果は返す）
 
         return jsonify(result), 200
 

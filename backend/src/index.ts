@@ -15,6 +15,7 @@ import { generalLimiter, analysisLimiter } from './middleware/rateLimiter';
 import stocksRouter from './routes/stocks';
 import analysisRouter from './routes/analysis';
 import portfolioRouter from './routes/portfolio';
+import { setupSwagger } from './swagger';
 
 // 環境変数を読み込む
 dotenv.config();
@@ -28,6 +29,9 @@ const PORT = process.env.API_PORT || 3000;
 
 // CORS 設定
 app.use(cors(getCorsConfig()));
+
+// Swagger 設定
+setupSwagger(app);
 
 // JSON パーサー
 app.use(express.json({ limit: '10mb' }));

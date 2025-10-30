@@ -8,8 +8,8 @@ import pandas as pd
 import logging
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
-from analyzer import TechnicalAnalyzer, Signal
-from data_fetch import DataFetcher
+from .analyzer import TechnicalAnalyzer, Signal
+from .data_fetch import DataFetcher
 
 # ロギング設定
 logger = logging.getLogger(__name__)

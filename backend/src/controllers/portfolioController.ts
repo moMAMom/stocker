@@ -40,16 +40,21 @@ export const createPortfolioEntry = asyncHandler(async (req: Request, res: Respo
     throw new AppError('ポートフォリオIDは数値である必要があります。', 400);
   }
 
+  // パラメータを数値に変換
+  const stock_idNum = typeof stock_id === 'string' ? parseInt(stock_id, 10) : stock_id;
+  const purchase_priceNum = typeof purchase_price === 'string' ? parseFloat(purchase_price) : purchase_price;
+  const quantityNum = typeof quantity === 'string' ? parseFloat(quantity) : quantity;
+
   // バリデーション
-  if (!stock_id || typeof stock_id !== 'number') {
+  if (!stock_id || isNaN(stock_idNum)) {
     throw new AppError('銘柄IDは必須で、数値である必要があります。', 400);
   }
 
-  if (!purchase_price || typeof purchase_price !== 'number') {
+  if (!purchase_price || isNaN(purchase_priceNum)) {
     throw new AppError('購入価格は必須で、数値である必要があります。', 400);
   }
 
-  if (!quantity || typeof quantity !== 'number') {
+  if (!quantity || isNaN(quantityNum)) {
     throw new AppError('数量は必須で、数値である必要があります。', 400);
   }
 
@@ -58,9 +63,9 @@ export const createPortfolioEntry = asyncHandler(async (req: Request, res: Respo
   }
 
   const input = {
-    stock_id,
-    purchase_price,
-    quantity,
+    stock_id: stock_idNum,
+    purchase_price: purchase_priceNum,
+    quantity: quantityNum,
     purchase_date,
     notes: notes ? String(notes).trim() : undefined,
   };

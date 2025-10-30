@@ -34,7 +34,7 @@ export async function getLatestAnalysis(stockId: number) {
     });
 
     if (!stock) {
-      throw new AppError(`銘柄ID ${stockId} が見つかりません。`, 404);
+      throw new AppError(404, `銘柄ID ${stockId} が見つかりません。`);
     }
 
     // 最新の分析結果を取得
@@ -44,7 +44,7 @@ export async function getLatestAnalysis(stockId: number) {
     });
 
     if (!analysis) {
-      throw new AppError(`銘柄ID ${stockId} の分析結果がまだ作成されていません。`, 404);
+      throw new AppError(404, `銘柄ID ${stockId} の分析結果がまだ作成されていません。`);
     }
 
     logger.info(`✅ 最新分析結果取得成功 (Stock ID: ${stockId})`);
@@ -72,7 +72,7 @@ export async function getLatestAnalysis(stockId: number) {
   } catch (error) {
     if (error instanceof AppError) throw error;
     logger.error(`❌ 最新分析結果取得失敗: ${error instanceof Error ? error.message : error}`);
-    throw new AppError('分析結果の取得に失敗しました。', 500);
+    throw new AppError(500, '分析結果の取得に失敗しました。');
   }
 }
 
@@ -87,7 +87,7 @@ export async function getAnalysisHistory(stockId: number, limit: number = 30, of
     });
 
     if (!stock) {
-      throw new AppError(`銘柄ID ${stockId} が見つかりません。`, 404);
+      throw new AppError(404, `銘柄ID ${stockId} が見つかりません。`);
     }
 
     // 分析結果の総件数を取得
@@ -136,7 +136,7 @@ export async function getAnalysisHistory(stockId: number, limit: number = 30, of
   } catch (error) {
     if (error instanceof AppError) throw error;
     logger.error(`❌ 分析履歴取得失敗: ${error instanceof Error ? error.message : error}`);
-    throw new AppError('分析履歴の取得に失敗しました。', 500);
+    throw new AppError(500, '分析履歴の取得に失敗しました。');
   }
 }
 
@@ -151,16 +151,16 @@ export async function upsertAnalysisResult(stockId: number, input: AnalysisResul
     });
 
     if (!stock) {
-      throw new AppError(`銘柄ID ${stockId} が見つかりません。`, 404);
+      throw new AppError(404, `銘柄ID ${stockId} が見つかりません。`);
     }
 
     // スコアと信頼度のバリデーション
     if (input.score < 0 || input.score > 100) {
-      throw new AppError('スコアは0-100の範囲である必要があります。', 400);
+      throw new AppError(400, 'スコアは0-100の範囲である必要があります。');
     }
 
     if (input.confidence < 0 || input.confidence > 1) {
-      throw new AppError('信頼度は0-1の範囲である必要があります。', 400);
+      throw new AppError(400, '信頼度は0-1の範囲である必要があります。');
     }
 
     // 今日の分析結果を取得
@@ -239,7 +239,70 @@ export async function upsertAnalysisResult(stockId: number, input: AnalysisResul
   } catch (error) {
     if (error instanceof AppError) throw error;
     logger.error(`❌ 分析結果操作失敗: ${error instanceof Error ? error.message : error}`);
-    throw new AppError('分析結果の操作に失敗しました。', 500);
+    throw new AppError(500, '分析結果の操作に失敗しました。');
+  }
+}
+
+/**
+ * Python から送られた分析結果を保存
+ * （銘柄コードから銘柄 ID を検索して保存）
+ */
+export async function saveAnalysisResultFromPython(ticker: string, analysis: any) {
+  try {
+    // 銘柄シンボルから銘柄を検索
+    const stock = await prisma.stock.findUnique({
+      where: { symbol: ticker },
+    });
+
+    if (!stock) {
+      throw new AppError(404, `銘柄シンボル ${ticker} が見つかりません。`);
+    }
+
+    // 分析結果を保存
+    const result = await prisma.analysisResult.create({
+      data: {
+        stock_id: stock.id,
+        signal: analysis.signal || 'HOLD',
+        score: analysis.composite_score || 0.5,
+        confidence: analysis.confidence || 0.5,
+        reason: analysis.reason || null,
+        ma_5: analysis.ma_5 || null,
+        ma_20: analysis.ma_20 || null,
+        ma_50: analysis.ma_50 || null,
+        rsi_14: analysis.rsi || null,
+        macd: analysis.macd || null,
+        macd_signal: analysis.signal_line || null,
+        current_price: analysis.current_price || 0,
+        analysis_date: new Date(),
+      },
+    });
+
+    logger.info(`✅ 分析結果を保存しました (Ticker: ${ticker}, Stock ID: ${stock.id})`);
+    return result;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    logger.error(`❌ 分析結果保存失敗: ${error instanceof Error ? error.message : error}`);
+    throw new AppError(500, '分析結果の保存に失敗しました。');
+  }
+}
+
+/**
+ * 複数の銘柄 ID から銘柄情報を取得
+ */
+export async function getStocksByIds(stockIds: number[]) {
+  try {
+    const stocks = await prisma.stock.findMany({
+      where: {
+        id: {
+          in: stockIds,
+        },
+      },
+    });
+
+    return stocks;
+  } catch (error) {
+    logger.error(`❌ 銘柄情報取得失敗: ${error instanceof Error ? error.message : error}`);
+    throw new AppError(500, '銘柄情報の取得に失敗しました。');
   }
 }
 
@@ -247,4 +310,7 @@ export default {
   getLatestAnalysis,
   getAnalysisHistory,
   upsertAnalysisResult,
+  saveAnalysisResultFromPython,
+  getStocksByIds,
 };
+

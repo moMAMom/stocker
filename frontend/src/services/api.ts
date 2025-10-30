@@ -108,6 +108,17 @@ class ApiService {
     return response.data;
   }
 
+  /**
+   * 分析を実行
+   */
+  async triggerAnalysis(stockIds: number[]): Promise<ApiResponse<any>> {
+    const response = await this.client.post<ApiResponse<any>>(
+      '/analysis/trigger',
+      { stockIds }
+    );
+    return response.data;
+  }
+
   // ============ ポートフォリオ API ============
 
   /**

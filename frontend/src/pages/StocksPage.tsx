@@ -58,6 +58,7 @@ const StocksPage: React.FC = () => {
     market: 'TSE',
     sector: '',
   });
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // 銘柄一覧を取得
   const fetchStocks = useCallback(async () => {
@@ -128,6 +129,32 @@ const StocksPage: React.FC = () => {
     }
   };
 
+  const handleAnalyzeAll = async () => {
+    if (stocksWithAnalysis.length === 0) {
+      alert('分析対象の銘柄がありません');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const stockIds = stocksWithAnalysis.map(stock => stock.id);
+      const response = await apiService.triggerAnalysis(stockIds);
+      if (response.success) {
+        alert('分析を開始しました。しばらく待ってから画面を更新してください。');
+        // 3秒後に自動更新
+        setTimeout(() => {
+          fetchStocks();
+        }, 3000);
+      } else {
+        alert(`エラー: ${response.error || '分析の実行に失敗しました'}`);
+      }
+    } catch (err) {
+      alert(`エラー: ${err instanceof Error ? err.message : '分析の実行に失敗しました'}`);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const getSignalColor = (signal: string | undefined) => {
     switch (signal) {
       case 'BUY':
@@ -166,9 +193,19 @@ const StocksPage: React.FC = () => {
           sx={{ minWidth: 250 }}
           placeholder="銘柄コード、名前で検索"
         />
-        <Button variant="contained" onClick={() => setOpenAddDialog(true)}>
-          新規銘柄追加
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleAnalyzeAll}
+            disabled={isAnalyzing || stocksWithAnalysis.length === 0}
+          >
+            {isAnalyzing ? '分析中...' : '全銘柄を分析'}
+          </Button>
+          <Button variant="contained" onClick={() => setOpenAddDialog(true)}>
+            新規銘柄追加
+          </Button>
+        </Box>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

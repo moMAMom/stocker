@@ -8,8 +8,8 @@ import pandas as pd
 import logging
 from typing import Dict, Optional, Tuple
 from enum import Enum
-from indicators import TechnicalIndicators
-from data_fetch import DataFetcher
+from .indicators import TechnicalIndicators
+from .data_fetch import DataFetcher
 
 # ロギング設定
 logger = logging.getLogger(__name__)
