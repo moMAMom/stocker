@@ -10,6 +10,9 @@ import logger from './utils/logger';
 import { errorHandler, asyncHandler, AppError } from './middleware/errorHandler';
 import { requestLogger, performanceLogger } from './middleware/requestLogger';
 import { getCorsConfig } from './middleware/corsConfig';
+import stocksRouter from './routes/stocks';
+import analysisRouter from './routes/analysis';
+import portfolioRouter from './routes/portfolio';
 
 // 環境変数を読み込む
 dotenv.config();
@@ -49,6 +52,15 @@ app.get('/api', (_req: Request, res: Response) => {
     docs: '/api-docs',
   });
 });
+
+// 銘柄管理 API ルーター
+app.use('/api/stocks', stocksRouter);
+
+// 分析結果 API ルーター
+app.use('/api/analysis', analysisRouter);
+
+// ポートフォリオ API ルーター
+app.use('/api/portfolio', portfolioRouter);
 
 // ========================================
 // エラーハンドリング
