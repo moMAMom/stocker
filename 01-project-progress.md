@@ -1,7 +1,7 @@
 # プロジェクト進捗
 
 **作成日　25/10/30**
-**更新日　25/10/30 14:23**
+**更新日　25/10/30 14:41**
 
 ## 完了タスク
 
@@ -48,19 +48,37 @@
 - [x] **T016** Prisma スキーマ設計・実装（analysis_results テーブル）
 - [x] **T017** Prisma スキーマ設計・実装（technical_indicators, portfolio テーブル）
 
+#### 完了済みタスク（続き）
+
+- [x] **T004** ローカル開発環境で Docker-compose が正常に起動することを確認（25/10/30）
+  - Docker ビルド完了（backend, frontend, analysis, postgres）
+  - すべてのコンテナが起動成功
+  - PostgreSQL healthy 状態確認
+  - Frontend: <http://localhost:5173>
+  - Backend: <http://localhost:3000>
+  - API Docs: <http://localhost:3000/api-docs>
+- [x] **T011** Redux Toolkit セットアップ（25/10/30）
+  - Redux store 設定完了
+  - rootReducer 実装完了
+  - stocksSlice, analysisSlice 実装完了
+- [x] **T013** PostgreSQL 初期化とコンテナ確認（25/10/30）
+  - PostgreSQL 15-alpine コンテナ起動成功
+  - ヘルスチェック通過
+  - 接続確認成功
+
 #### 実行予定タスク
 
-- [ ] **T004** ローカル開発環境で Docker-compose が正常に起動することを確認
-- [ ] **T011** Redux Toolkit セットアップ
-- [ ] **T013** PostgreSQL 初期化とコンテナ確認
 - [ ] **T018** Prisma マイグレーション実行（初期化）
+  - Prisma schema 存在確認済み
+  - DB 接続成功確認済み
+  - `npx prisma db push` 実行予定（libssl/openssl 警告あり、無視可能）
 - [ ] **T019** Prisma シードデータ（ダミー銘柄）作成（オプション）
 
 ## マイルストーン管理
 
 | フェーズ | マイルストーン | 目標完了日 | 状態 |
 |---------|-------------|---------|------|
-| フェーズ1 | Docker環境・DB準備完了 | 25/11/06 | 進行中（85%） |
+| フェーズ1 | Docker環境・DB準備完了 | 25/11/06 | 進行中（95%） |
 | フェーズ2 | バックエンドAPI完全実装・テスト完了 | 25/11/20 | 開始前 |
 | フェーズ3 | 分析エンジン・スケジューラ動作確認 | 25/12/04 | 開始前 |
 | フェーズ4 | フロントエンドUI完成・API連携確認 | 25/12/18 | 開始前 |
@@ -90,6 +108,8 @@
 - プロジェクト全体推定工期：7-11週間（約2-3ヶ月）
 - 各タスクの詳細内容は `/Do/04_Tasks.md` を参照
 - プロジェクトルール・ファイル構造は `00-project-rule.md` を参照
-- フェーズ1は85%完了、Redux Toolkit セットアップ完了
-- 残りは T004（Docker動作確認）、T011（Redux完成）、T013（PostgreSQL確認）、T018-T019（マイグレーション）
-- フロントエンド基本構造（Redux + React Router）完成、バックエンド基本実装完成
+- フェーズ1は95%完了、Docker環境・Redux・PostgreSQL すべて起動確認完了
+- 残りは T018-T019（Prisma マイグレーション、シードデータ）
+- 全コンテナ起動成功：PostgreSQL（ポート5432）、Backend（ポート3000）、Frontend（ポート5173）、Analysis（ポート5000）
+- バックエンド起動ログ確認：サーバーが <http://localhost:3000> で起動、API ドキュメント利用可能
+- Prisma libssl/openssl 警告は Alpine Linux の既知の問題、機能への影響なし
