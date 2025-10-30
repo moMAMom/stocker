@@ -1,0 +1,158 @@
+// Prisma スキーマ定義
+// PayPay Investment Helper のデータモデル
+// 作成日　25/10/30
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// 銘柄情報テーブル
+// ========================================
+
+model Stock {
+  id                 Int                 @id @default(autoincrement())
+  symbol             String              @unique
+  name               String
+  market             String              @default("TSE") // 東証
+  sector             String?
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+  
+  // リレーション
+  analysis_results   AnalysisResult[]
+  technical_indicators TechnicalIndicator[]
+  portfolio_entries  PortfolioEntry[]
+
+  @@index([symbol])
+  @@index([market])
+}
+
+// ========================================
+// テクニカル指標テーブル
+// ========================================
+
+model TechnicalIndicator {
+  id                 Int                 @id @default(autoincrement())
+  stock_id           Int
+  stock              Stock              @relation(fields: [stock_id], references: [id], onDelete: Cascade)
+  
+  // 移動平均線
+  ma_5               Float?
+  ma_20              Float?
+  ma_50              Float?
+  
+  // RSI（相対力指数）
+  rsi_14             Float?
+  
+  // MACD
+  macd               Float?
+  macd_signal        Float?
+  macd_histogram     Float?
+  
+  // その他指標
+  volume             Float?
+  close_price        Float?
+  
+  date               DateTime
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+
+  @@unique([stock_id, date])
+  @@index([stock_id])
+  @@index([date])
+}
+
+// ========================================
+// 分析結果テーブル
+// ========================================
+
+model AnalysisResult {
+  id                 Int                 @id @default(autoincrement())
+  stock_id           Int
+  stock              Stock              @relation(fields: [stock_id], references: [id], onDelete: Cascade)
+  
+  // 判定結果
+  signal             String              // "BUY", "SELL", "HOLD"
+  score              Float               // 0.0 - 100.0
+  confidence         Float               // 0.0 - 1.0
+  
+  // 理由
+  reason             String?
+  
+  // 指標値スナップショット
+  ma_5               Float?
+  ma_20              Float?
+  ma_50              Float?
+  rsi_14             Float?
+  macd               Float?
+  macd_signal        Float?
+  
+  // 現在値
+  current_price      Float
+  
+  analysis_date      DateTime
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+
+  @@unique([stock_id, analysis_date])
+  @@index([stock_id])
+  @@index([signal])
+  @@index([analysis_date])
+}
+
+// ========================================
+// ポートフォリオテーブル
+// ========================================
+
+model Portfolio {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  description        String?
+  user_id            String?             // 将来のマルチユーザー対応用
+  
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+  
+  // リレーション
+  entries            PortfolioEntry[]
+
+  @@index([user_id])
+}
+
+// ========================================
+// ポートフォリオエントリテーブル
+// ========================================
+
+model PortfolioEntry {
+  id                 Int                 @id @default(autoincrement())
+  portfolio_id       Int
+  portfolio          Portfolio          @relation(fields: [portfolio_id], references: [id], onDelete: Cascade)
+  
+  stock_id           Int
+  stock              Stock              @relation(fields: [stock_id], references: [id], onDelete: Cascade)
+  
+  // 購入情報
+  purchase_price     Float
+  quantity           Float
+  purchase_date      DateTime
+  
+  // 売却情報
+  sale_price         Float?
+  sale_date          DateTime?
+  
+  // 成績
+  notes              String?
+  
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+
+  @@index([portfolio_id])
+  @@index([stock_id])
+  @@index([purchase_date])
+}
