@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -42,6 +43,7 @@ interface StockWithAnalysis extends Stock {
 
 const StocksPage: React.FC = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { items, loading, error, filter, sort } = useSelector(
     (state: RootState) => state.stocks
   );
@@ -198,7 +200,12 @@ const StocksPage: React.FC = () => {
             </TableHead>
             <TableBody>
               {stocksWithAnalysis.map((stock) => (
-                <TableRow key={stock.id} hover>
+                <TableRow
+                  key={stock.id}
+                  hover
+                  onClick={() => navigate(`/stocks/${stock.id}`)}
+                  sx={{ cursor: 'pointer' }}
+                >
                   <TableCell>{stock.symbol}</TableCell>
                   <TableCell>{stock.name}</TableCell>
                   <TableCell>{stock.market}</TableCell>
@@ -215,7 +222,7 @@ const StocksPage: React.FC = () => {
                     )}
                   </TableCell>
                   <TableCell align="right">
-                    {stock.analysis ? `${stock.analysis.score.toFixed(1)}/10` : 'N/A'}
+                    {stock.analysis ? `${stock.analysis.score.toFixed(1)}/100` : 'N/A'}
                   </TableCell>
                   <TableCell align="right">
                     {stock.analysis ? `${(stock.analysis.confidence * 100).toFixed(0)}%` : 'N/A'}

@@ -7,6 +7,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import StocksPage from './pages/StocksPage';
+import StockDetailPage from './pages/StockDetailPage';
+import PortfolioPage from './pages/PortfolioPage';
 
 const App: React.FC = () => {
   return (
@@ -15,9 +17,9 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<StocksPage />} />
           <Route path="/stocks" element={<StocksPage />} />
-          <Route path="/stocks/:id" element={<div>Stock Detail Page</div>} />
+          <Route path="/stocks/:id" element={<StockDetailPage />} />
           <Route path="/dashboard" element={<div>Dashboard Page</div>} />
-          <Route path="/portfolio" element={<div>Portfolio Page</div>} />
+          <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
       </Layout>

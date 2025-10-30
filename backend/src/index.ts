@@ -10,6 +10,8 @@ import logger from './utils/logger';
 import { errorHandler, asyncHandler, AppError } from './middleware/errorHandler';
 import { requestLogger, performanceLogger } from './middleware/requestLogger';
 import { getCorsConfig } from './middleware/corsConfig';
+import { securityHeadersMiddleware } from './middleware/securityHeaders';
+import { generalLimiter, analysisLimiter } from './middleware/rateLimiter';
 import stocksRouter from './routes/stocks';
 import analysisRouter from './routes/analysis';
 import portfolioRouter from './routes/portfolio';
@@ -30,6 +32,12 @@ app.use(cors(getCorsConfig()));
 // JSON パーサー
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// セキュリティヘッダー設定
+app.use(securityHeadersMiddleware);
+
+// レート制限（全般的なAPI呼び出し）
+app.use('/api/', generalLimiter);
 
 // ロギングミドルウェア
 app.use(requestLogger);
@@ -56,8 +64,8 @@ app.get('/api', (_req: Request, res: Response) => {
 // 銘柄管理 API ルーター
 app.use('/api/stocks', stocksRouter);
 
-// 分析結果 API ルーター
-app.use('/api/analysis', analysisRouter);
+// 分析結果 API ルーター（分析エンドポイント用の厳しいレート制限を適用）
+app.use('/api/analysis', analysisLimiter, analysisRouter);
 
 // ポートフォリオ API ルーター
 app.use('/api/portfolio', portfolioRouter);
