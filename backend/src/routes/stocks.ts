@@ -5,6 +5,7 @@
 
 import { Router } from 'express';
 import * as stocksController from '../controllers/stocksController';
+import { validateRequest, schemas } from '../middleware/validator';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.get('/', stocksController.getAllStocks);
 router.get('/:id', stocksController.getStockById);
 
 // T025: POST /api/stocks - 新規銘柄追加
-router.post('/', stocksController.createStock);
+router.post('/', validateRequest(schemas.stock, 'body'), stocksController.createStock);
 
 // 一括登録 - 複数銘柄を一度に登録
 router.post('/batch/import', stocksController.batchCreateStocks);

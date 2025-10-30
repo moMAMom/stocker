@@ -78,27 +78,38 @@ export const createRateLimiter = (options: Partial<RateLimitOptions> = {}) => {
         count: 1,
         resetTime: now + config.windowMs,
       });
+      res.set('X-RateLimit-Limit', config.maxRequests.toString());
+      res.set('X-RateLimit-Remaining', (config.maxRequests - 1).toString());
+      res.set('X-RateLimit-Reset', (now + config.windowMs).toString());
       next();
-    } else {
-      entry.count++;
-
-      if (entry.count > config.maxRequests) {
-        logger.warn(`Rate limit exceeded for IP: ${key}, count: ${entry.count}`);
-
-        res.status(429).json({
-          error: 'Too Many Requests',
-          message: 'リクエストが多すぎます。しばらく後に再度お試しください。',
-          retryAfter: Math.ceil((entry.resetTime - now) / 1000),
-        });
-
-        res.set('Retry-After', Math.ceil((entry.resetTime - now) / 1000).toString());
-      } else {
-        res.set('X-RateLimit-Limit', config.maxRequests.toString());
-        res.set('X-RateLimit-Remaining', (config.maxRequests - entry.count).toString());
-        res.set('X-RateLimit-Reset', entry.resetTime.toString());
-        next();
-      }
+      return; // 重要: returnで処理を終了
     }
+
+    entry.count++;
+
+    if (entry.count > config.maxRequests) {
+      logger.warn(`Rate limit exceeded for IP: ${key}, count: ${entry.count}/${config.maxRequests}`);
+
+      const remainingTime = Math.ceil((entry.resetTime - now) / 1000);
+      res.set('Retry-After', remainingTime.toString());
+      res.set('X-RateLimit-Limit', config.maxRequests.toString());
+      res.set('X-RateLimit-Remaining', '0');
+      res.set('X-RateLimit-Reset', entry.resetTime.toString());
+
+      res.status(429).json({
+        error: 'Too Many Requests',
+        message: 'リクエストが多すぎます。しばらく後に再度お試しください。',
+        retryAfter: remainingTime,
+      });
+
+      return; // 重要: returnで処理を終了
+    }
+
+    res.set('X-RateLimit-Limit', config.maxRequests.toString());
+    res.set('X-RateLimit-Remaining', (config.maxRequests - entry.count).toString());
+    res.set('X-RateLimit-Reset', entry.resetTime.toString());
+    next();
+    return; // 重要: returnで処理を終了
   };
 };
 
@@ -106,10 +117,10 @@ export const createRateLimiter = (options: Partial<RateLimitOptions> = {}) => {
 // 標準的なレート制限設定
 // ========================================
 
-// 一般的なAPI呼び出し用（15分間に100リクエスト）
+// 一般的なAPI呼び出し用（15分間に1000リクエスト - 開発環境用に緩い設定）
 export const generalLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  maxRequests: 100,
+  maxRequests: 1000,
 });
 
 // ログイン試行用（15分間に5回）
@@ -118,10 +129,10 @@ export const loginLimiter = createRateLimiter({
   maxRequests: 5,
 });
 
-// 分析エンドポイント用（1時間に20回）
+// 分析エンドポイント用（1時間に200回 - 開発環境用に緩い設定）
 export const analysisLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
-  maxRequests: 20,
+  maxRequests: 200,
 });
 
 // ファイルアップロード用（1時間に5回）

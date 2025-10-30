@@ -1,7 +1,7 @@
 import request from 'supertest';
 import express, { Express } from 'express';
 import stocksRouter from '../../src/routes/stocks';
-import { errorHandler } from '../../src/middleware/errorHandler';
+import { errorHandler, AppError } from '../../src/middleware/errorHandler';
 
 describe('Stocks API Routes', () => {
   let app: Express;

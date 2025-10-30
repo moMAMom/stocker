@@ -1,16 +1,14 @@
 import { PrismaClient } from '@prisma/client';
-import { StocksService } from '../../src/services/stocksService';
+import * as stocksService from '../../src/services/stocksService';
 import { AppError } from '../../src/middleware/errorHandler';
 
 jest.mock('@prisma/client');
 
 describe('StocksService', () => {
-  let stocksService: StocksService;
   let prismaMock: jest.Mocked<PrismaClient>;
 
   beforeEach(() => {
     prismaMock = new PrismaClient() as jest.Mocked<PrismaClient>;
-    stocksService = new StocksService(prismaMock);
   });
 
   afterEach(() => {

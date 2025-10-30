@@ -68,8 +68,8 @@ app.get('/api', (_req: Request, res: Response) => {
 // 銘柄管理 API ルーター
 app.use('/api/stocks', stocksRouter);
 
-// 分析結果 API ルーター（分析エンドポイント用の厳しいレート制限を適用）
-app.use('/api/analysis', analysisLimiter, analysisRouter);
+// 分析結果 API ルーター（一般的なレート制限のみを適用）
+app.use('/api/analysis', analysisRouter);
 
 // ポートフォリオ API ルーター
 app.use('/api/portfolio', portfolioRouter);

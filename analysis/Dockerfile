@@ -21,4 +21,4 @@ COPY . .
 EXPOSE 5000
 
 # 分析エンジンを起動
-CMD ["python", "-m", "src.analyzer"]
+CMD ["python", "-m", "src"]

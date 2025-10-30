@@ -7,6 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as stocksService from '../services/stocksService';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import logger from '../utils/logger';
+import { successResponse } from '../utils/responseHelper';
 
 /**
  * GET /api/stocks
@@ -27,11 +28,7 @@ export const getAllStocks = asyncHandler(async (req: Request, res: Response) => 
 
   const result = await stocksService.getAllStocks(filter, pageNum, limitNum);
 
-  res.json({
-    success: true,
-    data: result.data,
-    pagination: result.pagination,
-  });
+  successResponse(res, result.data, undefined, result.pagination);
 });
 
 /**
@@ -48,10 +45,7 @@ export const getStockById = asyncHandler(async (req: Request, res: Response) => 
 
   const result = await stocksService.getStockById(idNum);
 
-  res.json({
-    success: true,
-    data: result,
-  });
+  successResponse(res, result);
 });
 
 /**
@@ -61,29 +55,16 @@ export const getStockById = asyncHandler(async (req: Request, res: Response) => 
 export const createStock = asyncHandler(async (req: Request, res: Response) => {
   const { symbol, name, sector, market } = req.body;
 
-  // バリデーション
-  if (!symbol || typeof symbol !== 'string' || symbol.trim().length === 0) {
-    throw new AppError('銘柄シンボルは必須で、空でない文字列である必要があります。', 400);
-  }
-
-  if (!name || typeof name !== 'string' || name.trim().length === 0) {
-    throw new AppError('銘柄名は必須で、空でない文字列である必要があります。', 400);
-  }
-
   const input = {
-    symbol: symbol.trim(),
-    name: name.trim(),
+    symbol: String(symbol).trim(),
+    name: String(name).trim(),
     sector: sector ? String(sector).trim() : undefined,
     market: market ? String(market).trim() : undefined,
   };
 
   const result = await stocksService.createStock(input);
 
-  res.status(201).json({
-    success: true,
-    data: result,
-    message: '銘柄を作成しました。',
-  });
+  return successResponse(res, result, '銘柄を作成しました。', undefined, 201);
 });
 
 /**
@@ -123,11 +104,7 @@ export const updateStock = asyncHandler(async (req: Request, res: Response) => {
 
   const result = await stocksService.updateStock(idNum, input);
 
-  res.json({
-    success: true,
-    data: result,
-    message: '銘柄を更新しました。',
-  });
+  return successResponse(res, result, '銘柄を更新しました。');
 });
 
 /**
@@ -144,11 +121,7 @@ export const deleteStock = asyncHandler(async (req: Request, res: Response) => {
 
   const result = await stocksService.deleteStock(idNum);
 
-  res.json({
-    success: true,
-    data: result,
-    message: '銘柄を削除しました。',
-  });
+  return successResponse(res, result, '銘柄を削除しました。');
 });
 
 /**
@@ -187,11 +160,7 @@ export const batchCreateStocks = asyncHandler(async (req: Request, res: Response
 
   const result = await stocksService.batchCreateStocks(validatedStocks);
 
-  res.status(201).json({
-    success: true,
-    data: result,
-    message: `${result.created}件の銘柄を登録しました。`,
-  });
+  return successResponse(res, result, `${result.created}件の銘柄を登録しました。`, undefined, 201);
 });
 
 export default {

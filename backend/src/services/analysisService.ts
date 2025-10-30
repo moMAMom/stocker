@@ -34,7 +34,7 @@ export async function getLatestAnalysis(stockId: number) {
     });
 
     if (!stock) {
-      throw new AppError(404, `銘柄ID ${stockId} が見つかりません。`);
+      throw new AppError(`銘柄ID ${stockId} が見つかりません。`, 404);
     }
 
     // 最新の分析結果を取得
@@ -44,7 +44,7 @@ export async function getLatestAnalysis(stockId: number) {
     });
 
     if (!analysis) {
-      throw new AppError(404, `銘柄ID ${stockId} の分析結果がまだ作成されていません。`);
+      throw new AppError(`銘柄ID ${stockId} の分析結果がまだ作成されていません。`, 404);
     }
 
     logger.info(`✅ 最新分析結果取得成功 (Stock ID: ${stockId})`);
@@ -72,7 +72,7 @@ export async function getLatestAnalysis(stockId: number) {
   } catch (error) {
     if (error instanceof AppError) throw error;
     logger.error(`❌ 最新分析結果取得失敗: ${error instanceof Error ? error.message : error}`);
-    throw new AppError(500, '分析結果の取得に失敗しました。');
+    throw new AppError('分析結果の取得に失敗しました。', 500);
   }
 }
 
@@ -87,7 +87,7 @@ export async function getAnalysisHistory(stockId: number, limit: number = 30, of
     });
 
     if (!stock) {
-      throw new AppError(404, `銘柄ID ${stockId} が見つかりません。`);
+      throw new AppError(`銘柄ID ${stockId} が見つかりません。`, 404);
     }
 
     // 分析結果の総件数を取得
@@ -136,7 +136,7 @@ export async function getAnalysisHistory(stockId: number, limit: number = 30, of
   } catch (error) {
     if (error instanceof AppError) throw error;
     logger.error(`❌ 分析履歴取得失敗: ${error instanceof Error ? error.message : error}`);
-    throw new AppError(500, '分析履歴の取得に失敗しました。');
+    throw new AppError('分析履歴の取得に失敗しました。', 500);
   }
 }
 
@@ -151,16 +151,16 @@ export async function upsertAnalysisResult(stockId: number, input: AnalysisResul
     });
 
     if (!stock) {
-      throw new AppError(404, `銘柄ID ${stockId} が見つかりません。`);
+      throw new AppError(`銘柄ID ${stockId} が見つかりません。`, 404);
     }
 
     // スコアと信頼度のバリデーション
     if (input.score < 0 || input.score > 100) {
-      throw new AppError(400, 'スコアは0-100の範囲である必要があります。');
+      throw new AppError('スコアは0-100の範囲である必要があります。', 400);
     }
 
     if (input.confidence < 0 || input.confidence > 1) {
-      throw new AppError(400, '信頼度は0-1の範囲である必要があります。');
+      throw new AppError('信頼度は0-1の範囲である必要があります。', 400);
     }
 
     // 今日の分析結果を取得
@@ -239,7 +239,7 @@ export async function upsertAnalysisResult(stockId: number, input: AnalysisResul
   } catch (error) {
     if (error instanceof AppError) throw error;
     logger.error(`❌ 分析結果操作失敗: ${error instanceof Error ? error.message : error}`);
-    throw new AppError(500, '分析結果の操作に失敗しました。');
+    throw new AppError('分析結果の操作に失敗しました。', 500);
   }
 }
 
@@ -255,7 +255,7 @@ export async function saveAnalysisResultFromPython(ticker: string, analysis: any
     });
 
     if (!stock) {
-      throw new AppError(404, `銘柄シンボル ${ticker} が見つかりません。`);
+      throw new AppError(`銘柄シンボル ${ticker} が見つかりません。`, 404);
     }
 
     // 分析結果を保存
@@ -282,7 +282,7 @@ export async function saveAnalysisResultFromPython(ticker: string, analysis: any
   } catch (error) {
     if (error instanceof AppError) throw error;
     logger.error(`❌ 分析結果保存失敗: ${error instanceof Error ? error.message : error}`);
-    throw new AppError(500, '分析結果の保存に失敗しました。');
+    throw new AppError('分析結果の保存に失敗しました。', 500);
   }
 }
 
@@ -302,7 +302,7 @@ export async function getStocksByIds(stockIds: number[]) {
     return stocks;
   } catch (error) {
     logger.error(`❌ 銘柄情報取得失敗: ${error instanceof Error ? error.message : error}`);
-    throw new AppError(500, '銘柄情報の取得に失敗しました。');
+    throw new AppError('銘柄情報の取得に失敗しました。', 500);
   }
 }
 
