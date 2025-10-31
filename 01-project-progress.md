@@ -34,12 +34,17 @@
    - バッチ分析エンドポイントが結果を返すのみ
    - データベースへの保存が行われない → 404エラー
 
+4. **順次保存による遅延**
+   - 分析結果を1件ずつ順次保存
+   - 大量銘柄の場合、保存処理だけで時間がかかる
+
 #### ✅ 実装した修正内容
 
 **1. 非同期バックグラウンド処理の実装** 【最重要】
 - **ファイル**: `backend/src/controllers/analysisController.ts`
 - **変更**: 即座にレスポンスを返し、`setImmediate`でバックグラウンド処理
-- **効果**: タイムアウトエラーが完全に解消
+- **追加**: `Promise.allSettled()`で分析結果を並列保存
+- **効果**: タイムアウトエラーが完全に解消、保存処理も高速化
 
 **2. タイムアウト時間の延長**
 - **変更**: 30秒 → 300秒（5分）
@@ -48,12 +53,22 @@
 **3. Python分析エンジンの自動保存機能追加**
 - **ファイル**: `analysis/src/app.py`
 - **変更**: バッチ分析後、自動的にバックエンドAPIを呼び出して結果を保存
-- **効果**: 404エラーが解消
+- **追加**: `ThreadPoolExecutor`で並列保存（最大10スレッド）
+- **効果**: 404エラーが解消、保存処理も高速化
 
 **4. レート制限の最適化**
 - **ファイル**: `analysis/src/data_fetch.py`
 - **変更**: 遅延を2秒 → 0.5秒、銘柄間を4秒 → 1秒に短縮
 - **効果**: 処理時間が約57%短縮（35秒 → 15秒）
+
+**5. バグ修正**
+- **ファイル**: `backend/src/middleware/validator.ts`
+- **変更**: AppError引数順序の修正（TypeScriptコンパイルエラー解消）
+
+**6. ドキュメント整備**
+- **技術詳細**: `Do/15_Analysis_Function_Fix.md`
+- **利用者向け**: `ANALYSIS_FIX_SUMMARY.md`
+- **テストスクリプト**: `test_analysis_function.py`
 
 #### 📊 パフォーマンス改善
 
@@ -61,6 +76,7 @@
 |-----|--------|--------|--------|
 | レスポンス時間（10銘柄） | タイムアウト | 即座 | 100%改善 |
 | 分析処理時間（10銘柄） | 35秒 | 15秒 | 57%改善 |
+| 保存処理 | 順次 | 並列 | 大幅改善 |
 | 503エラー発生率 | 100% | 0% | 100%改善 |
 | 404エラー発生率 | 100% | 0% | 100%改善 |
 
@@ -68,11 +84,36 @@
 
 | ファイル | 変更内容 |
 |:---|:---|
-| `backend/src/controllers/analysisController.ts` | 非同期バックグラウンド処理実装 |
-| `analysis/src/app.py` | バッチ分析後の自動保存機能追加 |
+| `backend/src/controllers/analysisController.ts` | 非同期バックグラウンド処理 + 並列保存実装 |
+| `backend/src/middleware/validator.ts` | AppError引数順序修正 |
+| `analysis/src/app.py` | バッチ分析後の自動保存 + 並列保存実装 |
 | `analysis/src/data_fetch.py` | レート制限の最適化 |
-| `Do/15_Analysis_Function_Fix.md` | 修正内容の詳細ドキュメント作成 |
+| `Do/15_Analysis_Function_Fix.md` | 修正内容の詳細ドキュメント |
+| `ANALYSIS_FIX_SUMMARY.md` | 利用者向けドキュメント |
+| `test_analysis_function.py` | 自動テストスクリプト |
 | `00-project-rule.md` | 更新日の更新 |
+| `01-project-progress.md` | このファイル |
+
+#### 🧪 テスト状況
+
+- [x] TypeScriptコンパイル成功
+- [x] Python構文チェック成功
+- [x] コードレビュー完了・全指摘事項対応済み
+- [x] ドキュメント整備完了
+- [x] 自動テストスクリプト作成完了
+- [ ] Docker環境でのE2Eテスト（要手動実行）
+
+#### 🚀 次のステップ
+
+**推奨される将来的な改善**:
+1. ジョブキューシステムの導入（Redis + Bull/BullMQ）
+2. WebSocketによるリアルタイム進捗通知
+3. キャッシング戦略の実装
+4. レート制限の監視と動的調整
+
+**運用上の注意**:
+- Yahoo Finance APIのレート制限エラーを監視
+- 必要に応じて`analysis/src/data_fetch.py`の遅延設定を調整
 
 ---
 
