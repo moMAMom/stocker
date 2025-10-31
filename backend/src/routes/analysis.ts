@@ -2,6 +2,7 @@
  * 分析結果管理ルーター
  * GET /api/analysis/:stockId
  * GET /api/analysis/:stockId/history
+ * GET /api/analysis/job/:jobId
  * POST /api/analysis/save
  * POST /api/analysis/trigger
  */
@@ -22,6 +23,12 @@ router.post('/trigger', analysisController.triggerAnalysis);
  * Python 分析エンジンから分析結果を受け取って保存
  */
 router.post('/save', analysisController.saveAnalysisResult);
+
+/**
+ * GET /api/analysis/job/:jobId
+ * 分析ジョブのステータスを取得
+ */
+router.get('/job/:jobId', analysisController.getAnalysisJobStatus);
 
 /**
  * GET /api/analysis/:stockId/history

@@ -50,7 +50,7 @@ class DataFetcher:
     def __init__(self):
         """Initialize DataFetcher."""
         self.jst = pytz.timezone('Asia/Tokyo')
-        self.rate_limit_delay = 2  # Increased from 0.2 to 2 seconds for Yahoo Finance API
+        self.rate_limit_delay = 0.5  # Reduced from 2 to 0.5 seconds for better performance
     
     @retry_with_backoff(max_retries=3, initial_delay=1, max_delay=8)
     def fetch_stock_data(
@@ -128,9 +128,9 @@ class DataFetcher:
         for i, ticker in enumerate(tickers):
             try:
                 results[ticker] = self.fetch_stock_data(ticker, period, interval)
-                # Add delay between requests to avoid rate limiting
+                # Add delay between requests to avoid rate limiting (reduced from 4s to 1s)
                 if i < len(tickers) - 1:
-                    time.sleep(self.rate_limit_delay * 2)
+                    time.sleep(1)
             except Exception as e:
                 logger.error(f"Failed to fetch {ticker}: {str(e)}")
                 results[ticker] = None

@@ -100,7 +100,7 @@ export const validateRequest =
 
     // エラーがあれば例外を投げる
     if (Object.keys(errors).length > 0) {
-      return next(new AppError(400, 'リクエスト検証エラー', errors));
+      return next(new AppError('リクエスト検証エラー', 400, errors));
     }
 
     next();

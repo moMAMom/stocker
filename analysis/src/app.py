@@ -13,6 +13,7 @@ from .analyzer import TechnicalAnalyzer
 from .backtest import Backtester
 import requests
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # 環境変数を読み込み
 load_dotenv()
@@ -28,6 +29,7 @@ CORS(app)
 # 設定
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:3000")
 PYTHON_SERVICE_PORT = int(os.getenv("PYTHON_SERVICE_PORT", 5000))
+MAX_SAVE_WORKERS = int(os.getenv("MAX_SAVE_WORKERS", 10))  # 並列保存の最大ワーカー数
 
 @app.route("/health", methods=["GET"])
 def health_check():
@@ -89,7 +91,8 @@ def analyze_batch():
     Request body:
         {
             "tickers": ["1234", "5678"],
-            "period": "1y"
+            "period": "1y",
+            "save_to_backend": true  # オプション: バックエンドに自動保存
         }
 
     Returns:
@@ -99,12 +102,56 @@ def analyze_batch():
         data = request.get_json()
         tickers = data.get("tickers", [])
         period = data.get("period", "1y")
+        save_to_backend = data.get("save_to_backend", True)  # デフォルトで保存
 
         if not tickers:
             return jsonify({"error": "No tickers provided"}), 400
 
+        logger.info(f"Batch analysis started for {len(tickers)} tickers")
+
         # 複数銘柄を分析
         results = TechnicalAnalyzer.analyze_multiple_stocks(tickers, period=period)
+
+        # バックエンドに結果を並列保存（パフォーマンス改善）
+        saved_count = 0
+        if save_to_backend:
+            def save_single_result(ticker, result):
+                """単一の分析結果を保存"""
+                try:
+                    save_response = requests.post(
+                        f"{BACKEND_URL}/api/analysis/save",
+                        json={
+                            "ticker": ticker,
+                            "analysis": result
+                        },
+                        timeout=10
+                    )
+                    if save_response.status_code == 201:
+                        logger.info(f"Saved analysis for {ticker} to backend")
+                        return True
+                    else:
+                        logger.warning(f"Failed to save {ticker}: {save_response.status_code}")
+                        return False
+                except Exception as save_error:
+                    logger.error(f"Error saving {ticker} to backend: {str(save_error)}")
+                    return False
+            
+            # ThreadPoolExecutorで並列保存（環境変数で設定可能）
+            with ThreadPoolExecutor(max_workers=MAX_SAVE_WORKERS) as executor:
+                future_to_ticker = {
+                    executor.submit(save_single_result, ticker, result): ticker 
+                    for ticker, result in results.items()
+                }
+                
+                for future in as_completed(future_to_ticker):
+                    ticker = future_to_ticker[future]
+                    try:
+                        if future.result():
+                            saved_count += 1
+                    except Exception as exc:
+                        logger.error(f"{ticker} generated an exception: {exc}")
+
+        logger.info(f"Batch analysis completed: {len(results)} analyzed, {saved_count} saved")
 
         return jsonify(results), 200
 
