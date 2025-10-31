@@ -1,9 +1,10 @@
 /**
  * 銘柄一覧ページ
  * 全銘柄をテーブル表示し、フィルタ・ソート・ページネーション対応
+ * 分析実行時は自動ポーリングで結果を更新
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -30,8 +31,6 @@ import {
   fetchStocksStart,
   fetchStocksSuccess,
   fetchStocksError,
-  setFilter,
-  setSort,
 } from '../stores/slices/stocksSlice';
 import type { RootState } from '../stores/rootReducer';
 import apiService from '../services/api';
@@ -44,13 +43,14 @@ interface StockWithAnalysis extends Stock {
 const StocksPage: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items, loading, error, filter, sort } = useSelector(
+  const { loading, error } = useSelector(
     (state: RootState) => state.stocks
   );
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(50); // 1ページあたりの件数
   const [searchText, setSearchText] = useState('');
   const [stocksWithAnalysis, setStocksWithAnalysis] = useState<StockWithAnalysis[]>([]);
+  const [totalCount, setTotalCount] = useState(0); // API から取得した全銘柄数
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [newStock, setNewStock] = useState({
     symbol: '',
@@ -59,6 +59,8 @@ const StocksPage: React.FC = () => {
     sector: '',
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const analysisStartTimeRef = useRef<number | null>(null);
 
   // 銘柄一覧を取得
   const fetchStocks = useCallback(async () => {
@@ -72,6 +74,14 @@ const StocksPage: React.FC = () => {
 
       if (response.success) {
         dispatch(fetchStocksSuccess(response.data || []));
+        
+        // 【重要】API レスポンスの pagination から全銘柄数を取得
+        if (response.pagination && response.pagination.total) {
+          setTotalCount(response.pagination.total);
+          console.log(`📊 全銘柄数: ${response.pagination.total}, 取得件数: ${response.data?.length}`);
+        } else {
+          console.warn('⚠️ pagination 情報が見つかりません');
+        }
 
         // 各銘柄の分析結果を取得
         if (response.data) {
@@ -136,24 +146,79 @@ const StocksPage: React.FC = () => {
     }
 
     setIsAnalyzing(true);
+    analysisStartTimeRef.current = Date.now();
+
     try {
       const stockIds = stocksWithAnalysis.map(stock => stock.id);
       const response = await apiService.triggerAnalysis(stockIds);
+      
       if (response.success) {
-        alert('分析を開始しました。しばらく待ってから画面を更新してください。');
-        // 3秒後に自動更新
+        alert('分析を開始しました。自動的に結果を更新します...');
+        
+        // 自動ポーリング開始（500ms ごとに状態確認、最大 5分間）
+        const maxPollingDuration = 5 * 60 * 1000; // 5分
+        const pollingInterval = 500; // 500ms
+
+        pollingIntervalRef.current = setInterval(async () => {
+          try {
+            // 全銘柄の最新分析結果を再取得
+            const updatedStocks = await Promise.all(
+              stocksWithAnalysis.map(async (stock) => {
+                try {
+                  const analysisResp = await apiService.getAnalysis(stock.id);
+                  return {
+                    ...stock,
+                    analysis: analysisResp.data,
+                  };
+                } catch {
+                  return stock;
+                }
+              })
+            );
+            
+            setStocksWithAnalysis(updatedStocks);
+
+            // ポーリング時間制限チェック
+            const elapsedTime = Date.now() - (analysisStartTimeRef.current || Date.now());
+            if (elapsedTime > maxPollingDuration) {
+              clearInterval(pollingIntervalRef.current!);
+              pollingIntervalRef.current = null;
+              setIsAnalyzing(false);
+              alert('分析がタイムアウトしました。');
+            }
+          } catch (error) {
+            console.error('ポーリング中にエラー:', error);
+          }
+        }, pollingInterval);
+
+        // 30秒後に最初のポーリングを停止し、ユーザーが停止できるようにする
         setTimeout(() => {
-          fetchStocks();
-        }, 3000);
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+            setIsAnalyzing(false);
+            alert('分析完了。最新の結果を表示しています。');
+          }
+        }, 30000);
+
       } else {
         alert(`エラー: ${response.error || '分析の実行に失敗しました'}`);
+        setIsAnalyzing(false);
       }
     } catch (err) {
       alert(`エラー: ${err instanceof Error ? err.message : '分析の実行に失敗しました'}`);
-    } finally {
       setIsAnalyzing(false);
     }
   };
+
+  // コンポーネントアンマウント時にポーリングをクリーンアップ
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
 
   const getSignalColor = (signal: string | undefined) => {
     switch (signal) {
@@ -272,9 +337,9 @@ const StocksPage: React.FC = () => {
             </TableBody>
           </Table>
           <TablePagination
-            rowsPerPageOptions={[5, 10, 25, 50]}
+            rowsPerPageOptions={[10, 25, 50, 100]}
             component="div"
-            count={items.length}
+            count={totalCount} // Redux の items.length ではなく、API から取得した全銘柄数を使用
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handlePageChange}

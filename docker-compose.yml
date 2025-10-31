@@ -17,6 +17,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init-tables.sql:/docker-entrypoint-initdb.d/01-init-tables.sql:ro
     networks:
       - paypay-network
     healthcheck:
@@ -50,6 +51,7 @@ services:
     volumes:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
+      - ./backend/paypay_securities_japanese_stocks.csv:/app/paypay_securities_japanese_stocks.csv:ro
       - ./logs:/app/logs
     networks:
       - paypay-network

@@ -1,7 +1,7 @@
 # プロジェクトルール
 
 **作成日　25/10/30**
-**更新日　25/10/30 22:30**
+**更新日　25/10/30 23:30**
 
 ## 1. ファイル・フォルダ構造
 
@@ -89,7 +89,9 @@ PayPay/
 | `RSI_PERIOD` | `number` | RSI 計算期間（デフォルト: 14） |
 | `MACD_FAST` | `number` | MACD 短期 EMA（デフォルト: 12） |
 | `MACD_SLOW` | `number` | MACD 長期 EMA（デフォルト: 26） |
-| `MACD_SIGNAL` | `number` | MACD シグナルライン（デフォルト: 9） |
+| `POLLING_INTERVAL_MS` | `number` | フロントエンド分析自動リロードポーリング間隔（ミリ秒、デフォルト: 500） |
+| `MAX_POLLING_DURATION_MS` | `number` | 最大ポーリング期間（ミリ秒、デフォルト: 300000 = 5分） |
+| `CSV_STOCK_LIST_PATH` | `string` | 銘柄リスト CSV ファイルパス（`paypay_securities_japanese_stocks.csv`） |
 | `AppError` | `class` | カスタムエラークラス（statusCode、message、details） |
 | `asyncHandler` | `function` | 非同期エラーハンドリングラッパー |
 | `validateRequest` | `function` | リクエスト検証ミドルウェアファクトリー |

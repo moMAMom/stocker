@@ -33,7 +33,8 @@
     "jsonwebtoken": "^9.0.0",
     "axios": "^1.6.2",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0"
+    "swagger-ui-express": "^5.0.0",
+    "csv-parse": "^5.4.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

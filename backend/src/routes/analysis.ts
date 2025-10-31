@@ -12,16 +12,10 @@ import * as analysisController from '../controllers/analysisController';
 const router = Router();
 
 /**
- * GET /api/analysis/:stockId
- * 特定銘柄の最新分析結果を取得
+ * POST /api/analysis/trigger
+ * ユーザーからの分析実行リクエストを受け付ける
  */
-router.get('/:stockId', analysisController.getLatestAnalysis);
-
-/**
- * GET /api/analysis/:stockId/history
- * 特定銘柄の過去分析履歴を取得
- */
-router.get('/:stockId/history', analysisController.getAnalysisHistory);
+router.post('/trigger', analysisController.triggerAnalysis);
 
 /**
  * POST /api/analysis/save
@@ -30,9 +24,15 @@ router.get('/:stockId/history', analysisController.getAnalysisHistory);
 router.post('/save', analysisController.saveAnalysisResult);
 
 /**
- * POST /api/analysis/trigger
- * ユーザーからの分析実行リクエストを受け付ける
+ * GET /api/analysis/:stockId/history
+ * 特定銘柄の過去分析履歴を取得
  */
-router.post('/trigger', analysisController.triggerAnalysis);
+router.get('/:stockId/history', analysisController.getAnalysisHistory);
+
+/**
+ * GET /api/analysis/:stockId
+ * 特定銘柄の最新分析結果を取得
+ */
+router.get('/:stockId', analysisController.getLatestAnalysis);
 
 export default router;
