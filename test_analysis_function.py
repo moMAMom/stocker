@@ -7,7 +7,6 @@
 
 import time
 import requests
-from datetime import datetime
 
 # 設定
 BACKEND_URL = "http://localhost:3000"
