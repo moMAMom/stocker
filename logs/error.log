@@ -1,0 +1,79 @@
+2025-10-31 09:56:33:5633 [31merror[39m: [31mError triggering analysis: timeout of 30000ms exceeded[39m
+2025-10-31 14:33:41:3341 [31merror[39m: [31m❌ 全銘柄取得失敗: [39m
+[31mInvalid `prisma.stock.count()` invocation in[39m
+[31m/app/dist/services/stocksService.js:42:42[39m
+
+[31m  39     where.market = filter.market;[39m
+[31m  40 }[39m
+[31m  41 // 総件数を取得[39m
+[31m→ 42 const total = await prisma.stock.count([39m
+[31mCan't reach database server at `postgres:5432`[39m
+
+[31mPlease make sure your database server is running at `postgres:5432`.[39m
+2025-10-31 14:33:41:3341 [31merror[39m: [31mUnhandled error: 銘柄データの取得に失敗しました。[39m
+2025-10-31 14:33:45:3345 [31merror[39m: [31m❌ 全銘柄取得失敗: [39m
+[31mInvalid `prisma.stock.count()` invocation in[39m
+[31m/app/dist/services/stocksService.js:42:42[39m
+
+[31m  39     where.market = filter.market;[39m
+[31m  40 }[39m
+[31m  41 // 総件数を取得[39m
+[31m→ 42 const total = await prisma.stock.count([39m
+[31mCan't reach database server at `postgres:5432`[39m
+
+[31mPlease make sure your database server is running at `postgres:5432`.[39m
+2025-10-31 14:33:45:3345 [31merror[39m: [31mUnhandled error: 銘柄データの取得に失敗しました。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 3681.T.T: 銘柄シンボル 3681.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6702.T.T: 銘柄シンボル 6702.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6954.T.T: 銘柄シンボル 6954.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 4901.T.T: 銘柄シンボル 4901.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 4478.T.T: 銘柄シンボル 4478.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 5108.T.T: 銘柄シンボル 5108.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6027.T.T: 銘柄シンボル 6027.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 4934.T.T: 銘柄シンボル 4934.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 7741.T.T: 銘柄シンボル 7741.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 7267.T.T: 銘柄シンボル 7267.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 8002.T.T: 銘柄シンボル 8002.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 8411.T.T: 銘柄シンボル 8411.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 7261.T.T: 銘柄シンボル 7261.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 8316.T.T: 銘柄シンボル 8316.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6966.T.T: 銘柄シンボル 6966.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 8031.T.T: 銘柄シンボル 8031.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 8801.T.T: 銘柄シンボル 8801.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 4188.T.T: 銘柄シンボル 4188.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 8802.T.T: 銘柄シンボル 8802.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 7211.T.T: 銘柄シンボル 7211.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 7011.T.T: 銘柄シンボル 7011.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 8058.T.T: 銘柄シンボル 8058.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6503.T.T: 銘柄シンボル 6503.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 8306.T.T: 銘柄シンボル 8306.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 4436.T.T: 銘柄シンボル 4436.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6981.T.T: 銘柄シンボル 6981.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 2269.T.T: 銘柄シンボル 2269.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6508.T.T: 銘柄シンボル 6508.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 4385.T.T: 銘柄シンボル 4385.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6095.T.T: 銘柄シンボル 6095.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6630.T.T: 銘柄シンボル 6630.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 3064.T.T: 銘柄シンボル 3064.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6506.T.T: 銘柄シンボル 6506.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 9831.T.T: 銘柄シンボル 9831.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 9064.T.T: 銘柄シンボル 9064.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 7272.T.T: 銘柄シンボル 7272.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 2931.T.T: 銘柄シンボル 2931.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 7182.T.T: 銘柄シンボル 7182.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 8113.T.T: 銘柄シンボル 8113.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 4689.T.T: 銘柄シンボル 4689.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 4755.T.T: 銘柄シンボル 4755.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6098.T.T: 銘柄シンボル 6098.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 8308.T.T: 銘柄シンボル 8308.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 7453.T.T: 銘柄シンボル 7453.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6723.T.T: 銘柄シンボル 6723.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6920.T.T: 銘柄シンボル 6920.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 4004.T.T: 銘柄シンボル 4004.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 9519.T.T: 銘柄シンボル 9519.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 6963.T.T: 銘柄シンボル 6963.T.T が見つかりません。[39m
+2025-10-31 14:53:28:5328 [31merror[39m: [31mError saving analysis for 7564.T.T: 銘柄シンボル 7564.T.T が見つかりません。[39m
+2025-10-31 16:33:37:3337 [31merror[39m: [31mError triggering analysis: Cannot read properties of undefined (reading 'create')[39m
+2025-10-31 16:33:37:3337 [31merror[39m: [31mUnhandled error: Cannot read properties of undefined (reading 'create')[39m
+2025-10-31 16:34:31:3431 [31merror[39m: [31mError triggering analysis: Cannot read properties of undefined (reading 'create')[39m
+2025-10-31 16:34:31:3431 [31merror[39m: [31mUnhandled error: Cannot read properties of undefined (reading 'create')[39m

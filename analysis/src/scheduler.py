@@ -137,9 +137,11 @@ def analyze_and_notify(tickers: List[str] = None):
                 stocks = response.json()
 
                 if isinstance(stocks, dict) and "data" in stocks:
-                    tickers = [s["code"] for s in stocks["data"]]
+                    # バックエンドは 'symbol' フィールドを返す（例: "4478.T"）
+                    tickers = [s["symbol"] for s in stocks["data"]]
                 elif isinstance(stocks, list):
-                    tickers = [s["code"] for s in stocks]
+                    # フォールバック: 直接リストの場合
+                    tickers = [s["symbol"] for s in stocks]
                 else:
                     logger.warning("Unexpected response format from backend")
                     return

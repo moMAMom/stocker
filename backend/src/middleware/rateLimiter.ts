@@ -69,6 +69,15 @@ export const createRateLimiter = (options: Partial<RateLimitOptions> = {}) => {
 
   return (req: Request, res: Response, next: NextFunction): void => {
     const key = keyGenerator(req);
+    
+    // Docker ネットワーク内からのリクエストはレート制限をスキップ
+    // 分析エンジンなどの内部サービスから大量のリクエストが来るため
+    const isInternalRequest = key?.startsWith('172.18.') || key?.startsWith('127.') || key === 'unknown';
+    if (isInternalRequest) {
+      next();
+      return;
+    }
+    
     const now = Date.now();
     const entry = rateLimitStore.get(key);
 

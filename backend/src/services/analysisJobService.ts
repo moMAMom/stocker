@@ -4,7 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import logger from '../utils/logger';
 
 const prisma = new PrismaClient();
@@ -30,7 +30,7 @@ export interface AnalysisJobStatus {
  * 新しい分析ジョブを作成
  */
 export async function createAnalysisJob(data: AnalysisJobData): Promise<string> {
-  const jobId = uuidv4();
+  const jobId = randomUUID();
   
   await prisma.analysisJob.create({
     data: {

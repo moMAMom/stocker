@@ -11,6 +11,7 @@ import StockDetailPage from './pages/StockDetailPage';
 import PortfolioPage from './pages/PortfolioPage';
 
 const App: React.FC = () => {
+  console.log('App component rendered');
   return (
     <Router>
       <Layout>
