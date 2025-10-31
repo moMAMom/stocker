@@ -7,7 +7,6 @@
 
 import time
 import requests
-import json
 from datetime import datetime
 
 # 設定
