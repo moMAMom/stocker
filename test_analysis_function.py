@@ -83,20 +83,73 @@ def test_trigger_analysis(stock_ids):
             print(f"   メッセージ: {data.get('message')}")
             print(f"   対象銘柄数: {data.get('analysis_count')}")
             print(f"   ステータス: {data.get('status')}")
+            print(f"   ジョブID: {data.get('jobId')}")
             
             if elapsed < 2:
                 print(f"   ✅ 即座にレスポンスが返っています（{elapsed:.2f}秒 < 2秒）")
             else:
                 print(f"   ⚠️  レスポンスが遅い可能性があります（{elapsed:.2f}秒）")
             
-            return True
+            return data.get('jobId')
         else:
             print(f"❌ 分析トリガー失敗: {response.status_code}")
             print(f"   エラー: {data}")
-            return False
+            return None
     except Exception as e:
         print(f"❌ エラー: {str(e)}")
+        return None
+
+def test_job_status(job_id, max_wait=30):
+    """ジョブステータス確認テスト"""
+    print_header(f"ジョブステータス確認（Job ID: {job_id}）")
+    
+    if not job_id:
+        print("⚠️  ジョブIDが取得できていません")
         return False
+    
+    print(f"ジョブの完了を待機中...")
+    start_time = time.time()
+    
+    for attempt in range(max_wait):
+        try:
+            response = requests.get(
+                f"{BACKEND_URL}/api/analysis/job/{job_id}",
+                timeout=5
+            )
+            
+            if response.status_code == 200:
+                data = response.json().get('data', {})
+                status = data.get('status')
+                
+                print(f"\r進捗: {data.get('processedCount', 0)}/{data.get('totalCount', 0)} "
+                      f"(成功: {data.get('successCount', 0)}, 失敗: {data.get('failedCount', 0)}) "
+                      f"- ステータス: {status}", end="", flush=True)
+                
+                if status == 'completed':
+                    elapsed = time.time() - start_time
+                    print(f"\n\n✅ ジョブ完了（待機時間: {elapsed:.1f}秒）")
+                    print(f"   総数: {data.get('totalCount')}")
+                    print(f"   成功: {data.get('successCount')}")
+                    print(f"   失敗: {data.get('failedCount')}")
+                    return True
+                elif status == 'failed':
+                    print(f"\n\n❌ ジョブ失敗")
+                    print(f"   エラー: {data.get('errorMessage')}")
+                    return False
+                
+                time.sleep(1)
+            elif response.status_code == 404:
+                print(f"\n❌ ジョブが見つかりません: {job_id}")
+                return False
+            else:
+                print(f"\n❌ 予期しないステータスコード: {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"\n❌ エラー: {str(e)}")
+            return False
+    
+    print(f"\n❌ タイムアウト: {max_wait}秒以内に完了しませんでした")
+    return False
 
 def test_get_analysis_result(stock_id, max_wait=30):
     """分析結果取得テスト（ポーリング）"""
@@ -198,10 +251,14 @@ def main():
         return
     
     # 3. 分析トリガー
-    stock_ids = [stock['id'] for stock in stocks]
-    results.append(("分析トリガー", test_trigger_analysis(stock_ids)))
+    job_id = test_trigger_analysis(stock_ids)
+    results.append(("分析トリガー", job_id is not None))
     
-    # 4. 分析結果取得（最初の銘柄のみ）
+    # 4. ジョブステータス確認
+    if job_id:
+        results.append(("ジョブステータス確認", test_job_status(job_id, max_wait=30)))
+    
+    # 5. 分析結果取得（最初の銘柄のみ）
     if stock_ids:
         results.append(("分析結果取得", test_get_analysis_result(stock_ids[0], max_wait=30)))
     
