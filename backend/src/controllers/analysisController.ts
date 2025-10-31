@@ -81,7 +81,7 @@ export const saveAnalysisResult = asyncHandler(async (req: Request, res: Respons
 
 /**
  * POST /api/analysis/trigger
- * Python 分析エンジンに分析を実行させる
+ * Python 分析エンジンに分析を実行させる（非同期バックグラウンド処理）
  */
 export const triggerAnalysis = asyncHandler(async (req: Request, res: Response) => {
   const { stockIds } = req.body;
@@ -103,29 +103,49 @@ export const triggerAnalysis = asyncHandler(async (req: Request, res: Response) 
     
     const tickers = stocks.map((stock: any) => stock.symbol);
     
-    const analysisResponse = await axios.post(
-      `${pythonServiceUrl}/analyze/batch`,
-      {
-        tickers: tickers,
-        period: '1y',
-      },
-      { timeout: 30000 } // 30 秒タイムアウト
-    );
-
-    logger.info(`分析リクエスト送信完了: ${tickers.join(', ')}`);
-
+    // 即座にレスポンスを返す（バックグラウンドで処理）
     res.json({
       success: true,
-      message: '分析を開始しました。',
+      message: '分析を開始しました。結果は順次保存されます。',
       analysis_count: stocks.length,
-      results: analysisResponse.data,
+      tickers: tickers,
+      status: 'processing',
+    });
+
+    // バックグラウンドで分析を実行（レスポンス後に実行）
+    setImmediate(async () => {
+      try {
+        logger.info(`バックグラウンド分析開始: ${tickers.join(', ')}`);
+        
+        const analysisResponse = await axios.post(
+          `${pythonServiceUrl}/analyze/batch`,
+          {
+            tickers: tickers,
+            period: '1y',
+          },
+          { timeout: 300000 } // 5分タイムアウト（複数銘柄対応）
+        );
+
+        logger.info(`バックグラウンド分析完了: ${tickers.length}銘柄`);
+        
+        // 分析結果をデータベースに保存
+        const results = analysisResponse.data;
+        for (const ticker of Object.keys(results)) {
+          try {
+            await analysisService.saveAnalysisResultFromPython(ticker, results[ticker]);
+            logger.info(`分析結果を保存: ${ticker}`);
+          } catch (saveError) {
+            logger.error(`分析結果保存エラー (${ticker}):`, saveError);
+          }
+        }
+        
+      } catch (error) {
+        logger.error('バックグラウンド分析エラー:', error);
+      }
     });
 
   } catch (error) {
     logger.error('Error triggering analysis:', error);
-    if (axios.isAxiosError(error)) {
-      throw new AppError('Python 分析エンジンへの接続に失敗しました。', 503);
-    }
     throw error;
   }
 });
