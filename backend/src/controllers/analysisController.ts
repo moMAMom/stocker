@@ -128,16 +128,23 @@ export const triggerAnalysis = asyncHandler(async (req: Request, res: Response) 
 
         logger.info(`バックグラウンド分析完了: ${tickers.length}銘柄`);
         
-        // 分析結果をデータベースに保存
+        // 分析結果をデータベースに並列保存（パフォーマンス改善）
         const results = analysisResponse.data;
-        for (const ticker of Object.keys(results)) {
+        const savePromises = Object.keys(results).map(async (ticker) => {
           try {
             await analysisService.saveAnalysisResultFromPython(ticker, results[ticker]);
             logger.info(`分析結果を保存: ${ticker}`);
+            return { ticker, success: true };
           } catch (saveError) {
             logger.error(`分析結果保存エラー (${ticker}):`, saveError);
+            return { ticker, success: false, error: saveError };
           }
-        }
+        });
+        
+        // すべての保存処理を並列実行（失敗しても他の保存は継続）
+        const saveResults = await Promise.allSettled(savePromises);
+        const successCount = saveResults.filter(r => r.status === 'fulfilled' && r.value.success).length;
+        logger.info(`分析結果保存完了: ${successCount}/${tickers.length}銘柄`);
         
       } catch (error) {
         logger.error('バックグラウンド分析エラー:', error);

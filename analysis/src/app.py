@@ -13,6 +13,7 @@ from .analyzer import TechnicalAnalyzer
 from .backtest import Backtester
 import requests
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # 環境変数を読み込み
 load_dotenv()
@@ -110,10 +111,11 @@ def analyze_batch():
         # 複数銘柄を分析
         results = TechnicalAnalyzer.analyze_multiple_stocks(tickers, period=period)
 
-        # バックエンドに結果を保存（オプション）
+        # バックエンドに結果を並列保存（パフォーマンス改善）
         saved_count = 0
         if save_to_backend:
-            for ticker, result in results.items():
+            def save_single_result(ticker, result):
+                """単一の分析結果を保存"""
                 try:
                     save_response = requests.post(
                         f"{BACKEND_URL}/api/analysis/save",
@@ -124,12 +126,29 @@ def analyze_batch():
                         timeout=10
                     )
                     if save_response.status_code == 201:
-                        saved_count += 1
                         logger.info(f"Saved analysis for {ticker} to backend")
+                        return True
                     else:
                         logger.warning(f"Failed to save {ticker}: {save_response.status_code}")
+                        return False
                 except Exception as save_error:
                     logger.error(f"Error saving {ticker} to backend: {str(save_error)}")
+                    return False
+            
+            # ThreadPoolExecutorで並列保存（最大10スレッド）
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                future_to_ticker = {
+                    executor.submit(save_single_result, ticker, result): ticker 
+                    for ticker, result in results.items()
+                }
+                
+                for future in as_completed(future_to_ticker):
+                    ticker = future_to_ticker[future]
+                    try:
+                        if future.result():
+                            saved_count += 1
+                    except Exception as exc:
+                        logger.error(f"{ticker} generated an exception: {exc}")
 
         logger.info(f"Batch analysis completed: {len(results)} analyzed, {saved_count} saved")
 
