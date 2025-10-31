@@ -54,6 +54,7 @@ def test_get_stocks():
             if stocks:
                 print(f"   例: {stocks[0].get('name')} ({stocks[0].get('symbol')})")
                 return stocks[:3]  # 最初の3銘柄を返す
+            return []
         else:
             print(f"❌ 銘柄一覧取得失敗: {response.status_code}")
             return []

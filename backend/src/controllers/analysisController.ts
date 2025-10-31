@@ -5,6 +5,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import * as analysisService from '../services/analysisService';
+import * as analysisJobService from '../services/analysisJobService';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import logger from '../utils/logger';
 import axios from 'axios';
@@ -98,10 +99,16 @@ export const triggerAnalysis = asyncHandler(async (req: Request, res: Response) 
       throw new AppError('指定された銘柄が見つかりません。', 404);
     }
 
+    const tickers = stocks.map((stock: any) => stock.symbol);
+    
+    // ジョブを作成
+    const jobId = await analysisJobService.createAnalysisJob({
+      stockIds,
+      tickers,
+    });
+
     // Python に分析リクエストを送信
     const pythonServiceUrl = process.env.PYTHON_SERVICE_URL || 'http://localhost:5000';
-    
-    const tickers = stocks.map((stock: any) => stock.symbol);
     
     // 即座にレスポンスを返す（バックグラウンドで処理）
     res.json({
@@ -110,12 +117,16 @@ export const triggerAnalysis = asyncHandler(async (req: Request, res: Response) 
       analysis_count: stocks.length,
       tickers: tickers,
       status: 'processing',
+      jobId: jobId, // ジョブIDを返す
     });
 
     // バックグラウンドで分析を実行（レスポンス後に実行）
     setImmediate(async () => {
       try {
-        logger.info(`バックグラウンド分析開始: ${tickers.join(', ')}`);
+        // ジョブステータスを processing に更新
+        await analysisJobService.updateAnalysisJobStatus(jobId, 'processing');
+        
+        logger.info(`バックグラウンド分析開始: ${tickers.join(', ')} (Job: ${jobId})`);
         
         const analysisResponse = await axios.post(
           `${pythonServiceUrl}/analyze/batch`,
@@ -126,17 +137,17 @@ export const triggerAnalysis = asyncHandler(async (req: Request, res: Response) 
           { timeout: 300000 } // 5分タイムアウト（複数銘柄対応）
         );
 
-        logger.info(`バックグラウンド分析完了: ${tickers.length}銘柄`);
+        logger.info(`バックグラウンド分析完了: ${tickers.length}銘柄 (Job: ${jobId})`);
         
         // 分析結果をデータベースに並列保存（パフォーマンス改善）
         const results = analysisResponse.data;
         const savePromises = Object.keys(results).map(async (ticker) => {
           try {
             await analysisService.saveAnalysisResultFromPython(ticker, results[ticker]);
-            logger.info(`分析結果を保存: ${ticker}`);
+            logger.info(`分析結果を保存: ${ticker} (Job: ${jobId})`);
             return { ticker, success: true };
           } catch (saveError) {
-            logger.error(`分析結果保存エラー (${ticker}):`, saveError);
+            logger.error(`分析結果保存エラー (${ticker}, Job: ${jobId}):`, saveError);
             return { ticker, success: false, error: saveError };
           }
         });
@@ -144,10 +155,24 @@ export const triggerAnalysis = asyncHandler(async (req: Request, res: Response) 
         // すべての保存処理を並列実行（失敗しても他の保存は継続）
         const saveResults = await Promise.allSettled(savePromises);
         const successCount = saveResults.filter(r => r.status === 'fulfilled' && r.value.success).length;
-        logger.info(`分析結果保存完了: ${successCount}/${tickers.length}銘柄`);
+        const failedCount = tickers.length - successCount;
+        
+        logger.info(`分析結果保存完了: ${successCount}/${tickers.length}銘柄 (Job: ${jobId})`);
+        
+        // ジョブステータスを completed に更新
+        await analysisJobService.updateAnalysisJobStatus(jobId, 'completed', {
+          processedCount: tickers.length,
+          successCount,
+          failedCount,
+        });
         
       } catch (error) {
-        logger.error('バックグラウンド分析エラー:', error);
+        logger.error(`バックグラウンド分析エラー (Job: ${jobId}):`, error);
+        
+        // ジョブステータスを failed に更新
+        await analysisJobService.updateAnalysisJobStatus(jobId, 'failed', {
+          errorMessage: error instanceof Error ? error.message : String(error),
+        });
       }
     });
 
@@ -157,9 +182,29 @@ export const triggerAnalysis = asyncHandler(async (req: Request, res: Response) 
   }
 });
 
+/**
+ * GET /api/analysis/job/:jobId
+ * 分析ジョブのステータスを取得
+ */
+export const getAnalysisJobStatus = asyncHandler(async (req: Request, res: Response) => {
+  const { jobId } = req.params;
+
+  const status = await analysisJobService.getAnalysisJobStatus(jobId);
+
+  if (!status) {
+    throw new AppError('指定されたジョブが見つかりません。', 404);
+  }
+
+  res.json({
+    success: true,
+    data: status,
+  });
+});
+
 export default {
   getLatestAnalysis,
   getAnalysisHistory,
   saveAnalysisResult,
   triggerAnalysis,
+  getAnalysisJobStatus,
 };

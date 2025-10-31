@@ -108,6 +108,39 @@ model AnalysisResult {
 }
 
 // ========================================
+// 分析ジョブステータステーブル
+// ========================================
+
+model AnalysisJob {
+  id                 Int                 @id @default(autoincrement())
+  job_id             String              @unique
+  status             String              // "pending", "processing", "completed", "failed"
+  
+  // 対象銘柄
+  stock_ids          String              // カンマ区切りのID
+  tickers            String              // カンマ区切りのティッカー
+  
+  // 進捗情報
+  total_count        Int
+  processed_count    Int                 @default(0)
+  success_count      Int                 @default(0)
+  failed_count       Int                 @default(0)
+  
+  // エラー情報
+  error_message      String?
+  
+  // タイムスタンプ
+  started_at         DateTime            @default(now())
+  completed_at       DateTime?
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+
+  @@index([job_id])
+  @@index([status])
+  @@index([started_at])
+}
+
+// ========================================
 // ポートフォリオテーブル
 // ========================================
 

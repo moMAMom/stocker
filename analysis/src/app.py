@@ -29,6 +29,7 @@ CORS(app)
 # 設定
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:3000")
 PYTHON_SERVICE_PORT = int(os.getenv("PYTHON_SERVICE_PORT", 5000))
+MAX_SAVE_WORKERS = int(os.getenv("MAX_SAVE_WORKERS", 10))  # 並列保存の最大ワーカー数
 
 @app.route("/health", methods=["GET"])
 def health_check():
@@ -135,8 +136,8 @@ def analyze_batch():
                     logger.error(f"Error saving {ticker} to backend: {str(save_error)}")
                     return False
             
-            # ThreadPoolExecutorで並列保存（最大10スレッド）
-            with ThreadPoolExecutor(max_workers=10) as executor:
+            # ThreadPoolExecutorで並列保存（環境変数で設定可能）
+            with ThreadPoolExecutor(max_workers=MAX_SAVE_WORKERS) as executor:
                 future_to_ticker = {
                     executor.submit(save_single_result, ticker, result): ticker 
                     for ticker, result in results.items()
