@@ -28,21 +28,23 @@ export interface TechnicalIndicator {
 
 export interface AnalysisResult {
   id: number;
-  stock_id: number;
-  signal: 'BUY' | 'SELL' | 'HOLD';
+  stockId: number;
+  signal: 'BUY' | 'SELL' | 'HOLD' | 'buy' | 'sell' | 'hold';
   score: number;
   confidence: number;
   reason?: string;
-  ma_5?: number;
-  ma_20?: number;
-  ma_50?: number;
-  rsi_14?: number;
-  macd?: number;
-  macd_signal?: number;
-  current_price: number;
-  analysis_date: string;
-  created_at: string;
-  updated_at: string;
+  indicators?: {
+    ma_5?: number;
+    ma_20?: number;
+    ma_50?: number;
+    rsi_14?: number;
+    macd?: number;
+    macd_signal?: number;
+  };
+  currentPrice: number;
+  analysisDate: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Portfolio {

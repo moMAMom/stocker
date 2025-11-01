@@ -64,7 +64,15 @@ export const createRateLimiter = (options: Partial<RateLimitOptions> = {}) => {
 
   const keyGenerator = config.keyGenerator || ((req: Request) => {
     // IPアドレスをキーとして使用
-    return (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.ip || 'unknown';
+    let ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.ip || 'unknown';
+    
+    // IPv6-mapped IPv4 アドレスをノーマライズ
+    // ::ffff:172.18.0.1 → 172.18.0.1
+    if (ip.includes('::ffff:')) {
+      ip = ip.replace('::ffff:', '');
+    }
+    
+    return ip;
   });
 
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -72,7 +80,12 @@ export const createRateLimiter = (options: Partial<RateLimitOptions> = {}) => {
     
     // Docker ネットワーク内からのリクエストはレート制限をスキップ
     // 分析エンジンなどの内部サービスから大量のリクエストが来るため
-    const isInternalRequest = key?.startsWith('172.18.') || key?.startsWith('127.') || key === 'unknown';
+    const isInternalRequest = 
+      (key && (key.includes('172.18.') || key.includes('127.'))) || 
+      key === 'unknown' ||
+      key === 'localhost' ||
+      key === '::ffff:127.0.0.1';  // IPv6 localhost
+    
     if (isInternalRequest) {
       next();
       return;

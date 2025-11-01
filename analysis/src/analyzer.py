@@ -132,7 +132,7 @@ class TechnicalAnalyzer:
                     "rsi_signal": rsi_signal.value,
                     "macd_signal": macd_signal.value,
                 },
-                "timestamp": latest_row.name if hasattr(latest_row, 'name') else None,
+                "timestamp": latest_row.name.isoformat() if hasattr(latest_row, 'name') and hasattr(latest_row.name, 'isoformat') else str(latest_row.name) if hasattr(latest_row, 'name') else None,
             }
 
         except Exception as e:
@@ -152,9 +152,8 @@ class TechnicalAnalyzer:
 
             # 移動平均線
             for period in TechnicalAnalyzer.MA_PERIODS:
-                indicators[f"ma_{period}"] = float(
-                    TechnicalIndicators.calculate_ma(close, period).iloc[-1]
-                )
+                ma_val = TechnicalIndicators.calculate_ma(close, period).iloc[-1]
+                indicators[f"ma_{period}"] = float(ma_val) if not pd.isna(ma_val) else None
 
             # RSI
             rsi = TechnicalIndicators.calculate_rsi(close, TechnicalAnalyzer.RSI_PERIOD)
@@ -167,19 +166,28 @@ class TechnicalAnalyzer:
                 slow=TechnicalAnalyzer.MACD_SLOW,
                 signal=TechnicalAnalyzer.MACD_SIGNAL,
             )
-            indicators["macd"] = float(macd_result["macd"].iloc[-1])
-            indicators["macd_signal"] = float(macd_result["signal"].iloc[-1])
-            indicators["macd_histogram"] = float(macd_result["histogram"].iloc[-1])
+            macd_val = float(macd_result["macd"].iloc[-1]) if not pd.isna(macd_result["macd"].iloc[-1]) else None
+            macd_signal_val = float(macd_result["signal"].iloc[-1]) if not pd.isna(macd_result["signal"].iloc[-1]) else None
+            macd_hist_val = float(macd_result["histogram"].iloc[-1]) if not pd.isna(macd_result["histogram"].iloc[-1]) else None
+            
+            indicators["macd"] = macd_val
+            indicators["macd_signal"] = macd_signal_val
+            indicators["macd_histogram"] = macd_hist_val
 
             # ボリンジャーバンド
             bb = TechnicalIndicators.calculate_bollinger_bands(close)
-            indicators["bb_upper"] = float(bb["upper"].iloc[-1])
-            indicators["bb_middle"] = float(bb["middle"].iloc[-1])
-            indicators["bb_lower"] = float(bb["lower"].iloc[-1])
+            bb_upper_val = float(bb["upper"].iloc[-1]) if not pd.isna(bb["upper"].iloc[-1]) else None
+            bb_middle_val = float(bb["middle"].iloc[-1]) if not pd.isna(bb["middle"].iloc[-1]) else None
+            bb_lower_val = float(bb["lower"].iloc[-1]) if not pd.isna(bb["lower"].iloc[-1]) else None
+            
+            indicators["bb_upper"] = bb_upper_val
+            indicators["bb_middle"] = bb_middle_val
+            indicators["bb_lower"] = bb_lower_val
 
             # ATR
             atr = TechnicalIndicators.calculate_atr(high, low, close)
-            indicators["atr"] = float(atr.iloc[-1]) if not pd.isna(atr.iloc[-1]) else None
+            atr_val = float(atr.iloc[-1]) if not pd.isna(atr.iloc[-1]) else None
+            indicators["atr"] = atr_val
 
             return indicators
 

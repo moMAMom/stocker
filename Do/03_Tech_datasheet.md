@@ -73,8 +73,6 @@
 
 | 項目 | 技術 | 用途 |
 |------|------|------|
-| コンテナ | Docker | 開発環境の再現性確保、デプロイメント簡素化 |
-| コンテナ管理 | Docker Compose | ローカル開発環境の multi-container 管理 |
 | CI/CD | GitHub Actions | 自動テスト、デプロイメント自動化 |
 | バージョン管理 | Git + GitHub | ソースコード管理、協業 |
 | デプロイ先 | Heroku / AWS EC2 / ローカルサーバー | 環境に応じた選択（要件次第） |
@@ -569,7 +567,6 @@ cron.schedule('0 15 * * 1-5', async () => {
 - Node.js 18 LTS 以上
 - Python 3.11 以上
 - PostgreSQL 15 以上
-- Docker & Docker Compose
 - Git
 
 ### 5.2 ローカル環境セットアップ
@@ -595,9 +592,10 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Docker で実行
-cd ..
-docker-compose up
+# 各サービスを個別に起動
+# バックエンド: cd backend && npm run dev
+# フロントエンド: cd frontend && npm run dev
+# PostgreSQLはローカルで起動済みであることを確認
 ```
 
 ---

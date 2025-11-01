@@ -42,8 +42,8 @@
 
 ### インフラ・デプロイ
 
-- **開発環境：** Docker + Docker Compose（理由：ローカル環境の再現性を確保）
-- **デプロイ先（初期版）：** ローカルサーバー（Docker）
+- **開発環境：** ローカル環境（理由：シンプルな開発環境で十分）
+- **デプロイ先（初期版）：** ローカルサーバー
 - **デプロイ先（将来）：** Vercel（フロントエンド）+ Heroku/AWS（バックエンド）
 - **CI/CD：** GitHub Actions（理由：Git リポジトリとの統合が容易）
 
@@ -212,7 +212,6 @@ PostgreSQL
 **タスク：**
 
 - [ ] プロジェクトリポジトリ初期化（Git + GitHub）
-- [ ] Docker + Docker Compose セットアップ
 - [ ] Node.js + Express.js プロジェクト初期化
 - [ ] TypeScript 設定
 - [ ] PostgreSQL スキーマ設計・作成（Prisma スキーマ定義）

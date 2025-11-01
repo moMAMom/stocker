@@ -16,6 +16,7 @@ import stocksRouter from './routes/stocks';
 import analysisRouter from './routes/analysis';
 import portfolioRouter from './routes/portfolio';
 import { setupSwagger } from './swagger';
+import { ensureUtf8Encoding } from './utils/prismaClient';
 
 // 環境変数を読み込む
 dotenv.config();
@@ -93,7 +94,10 @@ app.use(errorHandler);
 // サーバー起動
 // ========================================
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  // PostgreSQL UTF-8 エンコーディング初期化
+  await ensureUtf8Encoding();
+  
   logger.info(`🚀 サーバーが起動しました: http://localhost:${PORT}`);
   logger.info(`📚 API ドキュメント: http://localhost:${PORT}/api-docs`);
 });

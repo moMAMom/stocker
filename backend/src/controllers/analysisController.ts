@@ -141,9 +141,29 @@ export const triggerAnalysis = asyncHandler(async (req: Request, res: Response) 
         
         // 分析結果をデータベースに並列保存（パフォーマンス改善）
         const results = analysisResponse.data;
-        const savePromises = Object.keys(results).map(async (ticker) => {
+        
+        // デバッグ: 返される結果の形式を確認
+        logger.info(`📊 Python から返された結果の型: ${Array.isArray(results) ? 'Array' : typeof results}`);
+        logger.info(`📊 結果の内容: ${JSON.stringify(results).substring(0, 200)}...`);
+        
+        // 結果がリストの場合は辞書に変換
+        let resultsDict = results;
+        if (Array.isArray(results)) {
+          logger.warn(`⚠️  結果がリスト形式で返されています。辞書に変換します。`);
+          // 配列をティッカー: 結果の辞書に変換
+          resultsDict = {};
+          results.forEach((item: any, index: number) => {
+            if (item && item.ticker) {
+              resultsDict[item.ticker] = item;
+            } else {
+              logger.warn(`⚠️  インデックス ${index} の結果にティッカー情報がありません: ${JSON.stringify(item).substring(0, 100)}`);
+            }
+          });
+        }
+        
+        const savePromises = Object.keys(resultsDict).map(async (ticker) => {
           try {
-            await analysisService.saveAnalysisResultFromPython(ticker, results[ticker]);
+            await analysisService.saveAnalysisResultFromPython(ticker, resultsDict[ticker]);
             logger.info(`分析結果を保存: ${ticker} (Job: ${jobId})`);
             return { ticker, success: true };
           } catch (saveError) {

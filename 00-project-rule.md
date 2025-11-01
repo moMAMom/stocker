@@ -1,7 +1,7 @@
 # プロジェクトルール
 
 **作成日　25/10/30**
-**更新日　25/10/31 16:45**
+**更新日　25/11/01**
 
 ## 1. ファイル・フォルダ構造
 
@@ -34,7 +34,6 @@ PayPay/
 │   ├── tests/                   # ユニットテスト・統合テスト
 │   ├── package.json
 │   ├── tsconfig.json
-│   └── Dockerfile
 ├── frontend/                    # フロントエンド（React + Vite + TypeScript）
 │   ├── src/
 │   │   ├── components/          # React コンポーネント
@@ -48,8 +47,7 @@ PayPay/
 │   ├── tests/                   # ユニットテスト
 │   ├── package.json
 │   ├── tsconfig.json
-│   ├── vite.config.ts
-│   └── Dockerfile
+│   └── vite.config.ts
 ├── analysis/                    # テクニカル分析エンジン（Python）
 │   ├── src/
 │   │   ├── indicators.py        # 技術指標計算
@@ -59,9 +57,7 @@ PayPay/
 │   │   └── utils.py             # ユーティリティ
 │   ├── tests/                   # Python テスト
 │   ├── requirements.txt
-│   ├── Dockerfile
 │   └── README.md
-├── docker-compose.yml           # Docker Compose 設定
 ├── .env.example                 # 環境変数テンプレート
 ├── .gitignore
 ├── README.md                    # プロジェクト概要
@@ -131,6 +127,6 @@ PayPay/
 
 ## 6. デプロイメント
 
-- **開発環境**: ローカル Docker Compose
+- **開発環境**: ローカル実行（Node.js, Python, PostgreSQL）
 - **ステージング環境**: TBD
 - **本番環境**: TBD（Heroku / AWS 検討中）

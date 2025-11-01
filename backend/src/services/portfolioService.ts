@@ -3,11 +3,9 @@
  * ビジネスロジックの実装（Prisma ORM を使用）
  */
 
-import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/errorHandler';
 import logger from '../utils/logger';
-
-const prisma = new PrismaClient();
+import prisma, { ensureUtf8Encoding } from '../utils/prismaClient';
 
 interface CreatePortfolioEntryInput {
   stock_id: number;

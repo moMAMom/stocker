@@ -3,11 +3,9 @@
  * ビジネスロジックの実装（Prisma ORM を使用）
  */
 
-import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/errorHandler';
 import logger from '../utils/logger';
-
-const prisma = new PrismaClient();
+import prisma, { ensureUtf8Encoding } from '../utils/prismaClient';
 
 interface AnalysisResultInput {
   signal: 'BUY' | 'SELL' | 'HOLD';
@@ -258,30 +256,35 @@ export async function saveAnalysisResultFromPython(ticker: string, analysis: any
       throw new AppError(`銘柄シンボル ${ticker} が見つかりません。`, 404);
     }
 
+    logger.info(`📊 Python分析結果: ${JSON.stringify(analysis).substring(0, 300)}...`);
+
+    // Python から返されたデータの形式を確認し、適切なフィールドをマッピング
+    const indicators = analysis.indicators || {};
+    
     // 分析結果を保存
     const result = await prisma.analysisResult.create({
       data: {
         stock_id: stock.id,
-        signal: analysis.signal || 'HOLD',
-        score: analysis.composite_score || 0.5,
+        signal: (analysis.signal || 'hold').toUpperCase(),
+        score: Math.round((analysis.score || 0.5) * 100), // スコアを0-100の範囲に変換
         confidence: analysis.confidence || 0.5,
         reason: analysis.reason || null,
-        ma_5: analysis.ma_5 || null,
-        ma_20: analysis.ma_20 || null,
-        ma_50: analysis.ma_50 || null,
-        rsi_14: analysis.rsi || null,
-        macd: analysis.macd || null,
-        macd_signal: analysis.signal_line || null,
+        ma_5: indicators.ma_5 || null,
+        ma_20: indicators.ma_20 || null,
+        ma_50: indicators.ma_50 || null,
+        rsi_14: indicators.rsi || null,
+        macd: indicators.macd || null,
+        macd_signal: indicators.macd_signal || null,
         current_price: analysis.current_price || 0,
         analysis_date: new Date(),
       },
     });
 
-    logger.info(`✅ 分析結果を保存しました (Ticker: ${ticker}, Stock ID: ${stock.id})`);
+    logger.info(`✅ 分析結果を保存しました (Ticker: ${ticker}, Stock ID: ${stock.id}, Signal: ${result.signal}, Score: ${result.score})`);
     return result;
   } catch (error) {
     if (error instanceof AppError) throw error;
-    logger.error(`❌ 分析結果保存失敗: ${error instanceof Error ? error.message : error}`);
+    logger.error(`❌ 分析結果保存失敗 (${ticker}): ${error instanceof Error ? error.message : error}`);
     throw new AppError('分析結果の保存に失敗しました。', 500);
   }
 }
@@ -291,6 +294,8 @@ export async function saveAnalysisResultFromPython(ticker: string, analysis: any
  */
 export async function getStocksByIds(stockIds: number[]) {
   try {
+    logger.info(`🔍 銘柄IDで検索開始: ${stockIds.join(', ')}`);
+    
     const stocks = await prisma.stock.findMany({
       where: {
         id: {
@@ -298,6 +303,11 @@ export async function getStocksByIds(stockIds: number[]) {
         },
       },
     });
+
+    logger.info(`✅ 検索完了: ${stocks.length}件見つかりました`);
+    if (stocks.length === 0) {
+      logger.warn(`⚠️  見つかった銘柄がありません。検索ID: ${stockIds.join(', ')}`);
+    }
 
     return stocks;
   } catch (error) {
@@ -313,4 +323,3 @@ export default {
   saveAnalysisResultFromPython,
   getStocksByIds,
 };
-

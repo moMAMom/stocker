@@ -61,6 +61,7 @@ const StocksPage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const analysisStartTimeRef = useRef<number | null>(null);
+  const pollingCountRef = useRef<number>(0);
 
   // 銘柄一覧を取得
   const fetchStocks = useCallback(async () => {
@@ -83,23 +84,17 @@ const StocksPage: React.FC = () => {
           console.warn('⚠️ pagination 情報が見つかりません');
         }
 
-        // 各銘柄の分析結果を取得
-        if (response.data) {
-          const stocksData = await Promise.all(
-            response.data.map(async (stock) => {
-              try {
-                const analysisResp = await apiService.getAnalysis(stock.id);
-                return {
-                  ...stock,
-                  analysis: analysisResp.data,
-                };
-              } catch {
-                return stock;
-              }
-            })
-          );
-          setStocksWithAnalysis(stocksData);
-        }
+        // 【パフォーマンス改善】
+        // 初回ロード時は分析結果を取得しない
+        // （全銘柄の分析結果を取得するとレート制限に引っかかる可能性がある）
+        // ユーザーが「全銘柄を分析」ボタンを押す時に取得する
+        setStocksWithAnalysis(
+          response.data.map((stock: any) => ({
+            ...stock,
+            analysis: undefined,  // 初期状態では分析結果は未設定
+          }))
+        );
+
       } else {
         dispatch(fetchStocksError(response.error || '不明なエラー'));
       }
@@ -155,27 +150,34 @@ const StocksPage: React.FC = () => {
       if (response.success) {
         alert('分析を開始しました。自動的に結果を更新します...');
         
-        // 自動ポーリング開始（500ms ごとに状態確認、最大 5分間）
-        const maxPollingDuration = 5 * 60 * 1000; // 5分
-        const pollingInterval = 500; // 500ms
+        // 自動ポーリング開始（5秒ごとに状態確認、最大 10分間）
+        const maxPollingDuration = 10 * 60 * 1000; // 10分
+        const pollingInterval = 5000; // 5秒（高速ポーリングによるレート制限を回避）
 
         pollingIntervalRef.current = setInterval(async () => {
           try {
-            // 全銘柄の最新分析結果を再取得
-            const updatedStocks = await Promise.all(
-              stocksWithAnalysis.map(async (stock) => {
-                try {
-                  const analysisResp = await apiService.getAnalysis(stock.id);
-                  return {
-                    ...stock,
-                    analysis: analysisResp.data,
-                  };
-                } catch {
-                  return stock;
-                }
-              })
-            );
+            // 【改善】全銘柄を順序付けてバッチ処理（3個ずつ、5秒ごと）
+            const batchSize = 3; // 1回のポーリングで3個のみ取得
+            const updatedStocks = [...stocksWithAnalysis];
             
+            // 前回ポーリングからの続きを計算
+            const currentBatchIndex = (pollingCountRef.current || 0);
+            const batchStartIndex = (currentBatchIndex * batchSize) % stocksWithAnalysis.length;
+            const batchEndIndex = Math.min(batchStartIndex + batchSize, stocksWithAnalysis.length);
+            
+            // 現在のバッチのみ取得（逐次実行）
+            for (let i = batchStartIndex; i < batchEndIndex; i++) {
+              try {
+                const stock = stocksWithAnalysis[i];
+                const analysisResp = await apiService.getAnalysis(stock.id);
+                updatedStocks[i].analysis = analysisResp.data;
+              } catch (error) {
+                // エラーでも次に進む
+                console.log(`Stock ${i} analysis failed, continuing...`);
+              }
+            }
+            
+            pollingCountRef.current = (currentBatchIndex + 1);
             setStocksWithAnalysis(updatedStocks);
 
             // ポーリング時間制限チェック
@@ -191,7 +193,8 @@ const StocksPage: React.FC = () => {
           }
         }, pollingInterval);
 
-        // 30秒後に最初のポーリングを停止し、ユーザーが停止できるようにする
+        // 【修正】179銘柄を5秒ごと3個ずつ処理すると約300秒必要
+        // タイムアウト時間を30秒→350秒(5分50秒)に延長
         setTimeout(() => {
           if (pollingIntervalRef.current) {
             clearInterval(pollingIntervalRef.current);
@@ -199,7 +202,7 @@ const StocksPage: React.FC = () => {
             setIsAnalyzing(false);
             alert('分析完了。最新の結果を表示しています。');
           }
-        }, 30000);
+        }, 350000);
 
       } else {
         alert(`エラー: ${response.error || '分析の実行に失敗しました'}`);
@@ -330,7 +333,7 @@ const StocksPage: React.FC = () => {
                     {stock.analysis ? `${(stock.analysis.confidence * 100).toFixed(0)}%` : 'N/A'}
                   </TableCell>
                   <TableCell align="right">
-                    {stock.analysis ? `¥${stock.analysis.current_price.toLocaleString()}` : 'N/A'}
+                    {stock.analysis ? `¥${stock.analysis.currentPrice.toLocaleString()}` : 'N/A'}
                   </TableCell>
                 </TableRow>
               ))}

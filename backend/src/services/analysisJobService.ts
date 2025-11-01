@@ -3,11 +3,9 @@
  * バックグラウンド分析のステータス追跡
  */
 
-import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import logger from '../utils/logger';
-
-const prisma = new PrismaClient();
+import prisma, { ensureUtf8Encoding } from '../utils/prismaClient';
 
 export interface AnalysisJobData {
   stockIds: number[];

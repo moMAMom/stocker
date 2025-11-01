@@ -84,13 +84,14 @@ def analyze_stock(ticker: str):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/analyze/batch", methods=["POST"])
+@app.route("/analyze", methods=["POST"])
 def analyze_batch():
     """
     複数銘柄を分析します。
 
     Request body:
         {
-            "tickers": ["1234", "5678"],
+            "stockIds": [1, 2, 3],  # または "tickers": ["1234.T", "5678.T"]
             "period": "1y",
             "save_to_backend": true  # オプション: バックエンドに自動保存
         }
@@ -100,9 +101,29 @@ def analyze_batch():
     """
     try:
         data = request.get_json()
+        
+        # stockIds または tickers のいずれかを受け取る
         tickers = data.get("tickers", [])
+        if not tickers and "stockIds" in data:
+            stock_ids = data.get("stockIds", [])
+            try:
+                stocks_response = requests.get(
+                    f"{BACKEND_URL}/api/stocks",
+                    timeout=10
+                )
+                if stocks_response.status_code == 200:
+                    all_stocks = stocks_response.json().get("data", [])
+                    tickers = [
+                        stock["symbol"] for stock in all_stocks
+                        if stock["id"] in stock_ids
+                    ]
+                    logger.info(f"✅ stockIds を tickers に変換しました: {tickers}")
+            except Exception as fetch_error:
+                logger.error(f"❌ バックエンドから株式情報を取得できません: {str(fetch_error)}")
+                return jsonify({"error": "Failed to fetch stock information"}), 500
+        
         period = data.get("period", "1y")
-        save_to_backend = data.get("save_to_backend", True)  # デフォルトで保存
+        save_to_backend = data.get("save_to_backend", True)
 
         if not tickers:
             return jsonify({"error": "No tickers provided"}), 400
@@ -152,6 +173,10 @@ def analyze_batch():
                         logger.error(f"{ticker} generated an exception: {exc}")
 
         logger.info(f"Batch analysis completed: {len(results)} analyzed, {saved_count} saved")
+
+        # デバッグ: 返される結果の形式を確認
+        logger.info(f"📊 結果は dict 形式です。キー: {list(results.keys())[:5]}...")
+        logger.info(f"📊 結果の総数: {len(results)}")
 
         return jsonify(results), 200
 
