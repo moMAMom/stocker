@@ -33,7 +33,6 @@ const PortfolioPage: React.FC = () => {
   const [entries, setEntries] = useState<PortfolioEntryWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPortfolioId, setSelectedPortfolioId] = useState<number | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
@@ -50,9 +49,6 @@ const PortfolioPage: React.FC = () => {
 
           // 最初のポートフォリオを選択
           if (portfoliosResponse.data.length > 0) {
-            const portfolioId = portfoliosResponse.data[0].id;
-            setSelectedPortfolioId(portfolioId);
-
             // エントリ取得（簡略版：全エントリ取得後にフィルタリング）
             // 実装では、バックエンド側でポートフォリオ別エントリ取得エンドポイント追加が必要
           }
@@ -81,7 +77,7 @@ const PortfolioPage: React.FC = () => {
   // 評価損益計算
   const calculatePnL = (entry: PortfolioEntryWithDetails) => {
     if (!entry.analysis) return null;
-    const currentValue = entry.analysis.current_price * entry.quantity;
+    const currentValue = entry.analysis.currentPrice * entry.quantity;
     const costValue = entry.purchase_price * entry.quantity;
     const pnl = currentValue - costValue;
     const pnlPercent = ((pnl / costValue) * 100).toFixed(2);
@@ -100,7 +96,7 @@ const PortfolioPage: React.FC = () => {
     entries.forEach((entry) => {
       totalCost += entry.purchase_price * entry.quantity;
       if (entry.analysis) {
-        totalValue += entry.analysis.current_price * entry.quantity;
+        totalValue += entry.analysis.currentPrice * entry.quantity;
       }
     });
 
@@ -216,12 +212,12 @@ const PortfolioPage: React.FC = () => {
                         <TableCell align="right">{entry.quantity}</TableCell>
                         <TableCell align="right">¥{entry.purchase_price.toLocaleString()}</TableCell>
                         <TableCell align="right">
-                          ¥{entry.analysis?.current_price.toLocaleString() || 'N/A'}
+                          ¥{entry.analysis?.currentPrice.toLocaleString() || 'N/A'}
                         </TableCell>
                         <TableCell align="right">
                           ¥
                           {entry.analysis
-                            ? (entry.analysis.current_price * entry.quantity).toLocaleString()
+                            ? (entry.analysis.currentPrice * entry.quantity).toLocaleString()
                             : 'N/A'}
                         </TableCell>
                         <TableCell

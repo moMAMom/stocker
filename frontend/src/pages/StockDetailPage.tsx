@@ -105,20 +105,6 @@ const StockDetailPage: React.FC<StockDetailPageProps> = () => {
     }
   };
 
-  // シグナルの色分け
-  const getSignalColor = (signal: string) => {
-    switch (signal) {
-      case '買い':
-        return 'success';
-      case '売り':
-        return 'error';
-      case '保有':
-        return 'warning';
-      default:
-        return 'default';
-    }
-  };
-
   // シグナルの背景色
   const getSignalBgColor = (signal: string) => {
     switch (signal) {
@@ -206,9 +192,9 @@ const StockDetailPage: React.FC<StockDetailPageProps> = () => {
                 <Typography color="textSecondary" gutterBottom>
                   移動平均線 (MA)
                 </Typography>
-                <Typography variant="h6">MA5: {analysis.ma_5?.toFixed(2)}</Typography>
-                <Typography variant="body2">MA20: {analysis.ma_20?.toFixed(2)}</Typography>
-                <Typography variant="body2">MA50: {analysis.ma_50?.toFixed(2)}</Typography>
+                <Typography variant="h6">MA5: {analysis.indicators?.ma_5?.toFixed(2)}</Typography>
+                <Typography variant="body2">MA20: {analysis.indicators?.ma_20?.toFixed(2)}</Typography>
+                <Typography variant="body2">MA50: {analysis.indicators?.ma_50?.toFixed(2)}</Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -219,9 +205,9 @@ const StockDetailPage: React.FC<StockDetailPageProps> = () => {
                 <Typography color="textSecondary" gutterBottom>
                   RSI（相対力指数）
                 </Typography>
-                <Typography variant="h6">{analysis.rsi_14?.toFixed(2)}</Typography>
-                <Typography variant="body2" sx={{ mt: 1, color: analysis.rsi_14! > 70 ? '#f44336' : analysis.rsi_14! < 30 ? '#4caf50' : '#ff9800' }}>
-                  {analysis.rsi_14! > 70 ? '過買い' : analysis.rsi_14! < 30 ? '過売り' : 'ニュートラル'}
+                <Typography variant="h6">{analysis.indicators?.rsi_14?.toFixed(2)}</Typography>
+                <Typography variant="body2" sx={{ mt: 1, color: analysis.indicators?.rsi_14! > 70 ? '#f44336' : analysis.indicators?.rsi_14! < 30 ? '#4caf50' : '#ff9800' }}>
+                  {analysis.indicators?.rsi_14! > 70 ? '過買い' : analysis.indicators?.rsi_14! < 30 ? '過売り' : 'ニュートラル'}
                 </Typography>
               </CardContent>
             </Card>
@@ -233,8 +219,8 @@ const StockDetailPage: React.FC<StockDetailPageProps> = () => {
                 <Typography color="textSecondary" gutterBottom>
                   MACD
                 </Typography>
-                <Typography variant="h6">MACD: {analysis.macd?.toFixed(4)}</Typography>
-                <Typography variant="body2">Signal: {analysis.macd_signal?.toFixed(4)}</Typography>
+                <Typography variant="h6">MACD: {analysis.indicators?.macd?.toFixed(4)}</Typography>
+                <Typography variant="body2">Signal: {analysis.indicators?.macd_signal?.toFixed(4)}</Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -245,9 +231,9 @@ const StockDetailPage: React.FC<StockDetailPageProps> = () => {
                 <Typography color="textSecondary" gutterBottom>
                   現在の価格
                 </Typography>
-                <Typography variant="h6">¥{analysis.current_price?.toFixed(2)}</Typography>
+                <Typography variant="h6">¥{analysis.currentPrice?.toFixed(2)}</Typography>
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  更新: {new Date(analysis.updated_at).toLocaleDateString('ja-JP')}
+                  更新: {new Date(analysis.updatedAt).toLocaleDateString('ja-JP')}
                 </Typography>
               </CardContent>
             </Card>
@@ -284,7 +270,7 @@ const StockDetailPage: React.FC<StockDetailPageProps> = () => {
               />
               <Legend />
               <Line yAxisId="left" type="monotone" dataKey="score" stroke="#8884d8" name="スコア" />
-              <Line yAxisId="right" type="monotone" dataKey="current_price" stroke="#82ca9d" name="価格（円）" />
+              <Line yAxisId="right" type="monotone" dataKey="currentPrice" stroke="#82ca9d" name="価格（円）" />
             </LineChart>
           </ResponsiveContainer>
         </Paper>

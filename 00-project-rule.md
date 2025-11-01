@@ -15,6 +15,27 @@ PayPay/
 │   ├── 03_Tech_datasheet.md     # 技術補助資料
 │   ├── 04_Tasks.md              # タスク分解と進捗管理
 │   ├── 05_Integrity_Report.md   # 整合性報告書
+│   ├── 06_DeveloperGuide.md     # 開発者ガイド
+│   ├── 07_Deployment_Checklist.md # デプロイメントチェックリスト
+│   ├── 08_Security_Checklist.md # セキュリティチェックリスト
+│   ├── 09_Database_Migration_Plan.md # DBマイグレーションプラン
+│   ├── 10_Implementation_Review.md # 実装レビュー
+│   ├── 11_Implementation_Fixes.md # 実装修正
+│   ├── 12_Implementation_Completion_Report.md # 実装完了報告
+│   ├── 13_Latest_Fixes.md       # 最新修正
+│   ├── 14_503ErrorResolution.md # 503エラー解決
+│   ├── 15_Analysis_Function_Fix.md # 分析機能修正
+│   ├── 16_Ticker_Symbol_Fix.md  # ティッカーシンボル修正
+│   ├── 17_yfinance_429_Diagnosis.md # yfinance 429診断
+│   ├── 18_yfinance_429_RootCause_Analysis.md # yfinance 429根本原因分析
+│   ├── 19_yfinance_429_Implementation.md # yfinance 429実装
+│   ├── BUGFIX_SUMMARY_429.md    # 429エラーバグフィックスサマリー
+│   ├── BUGFIX_SUMMARY_503.md    # 503エラーバグフィックスサマリー
+│   ├── ANALYSIS_FIX_SUMMARY.md  # 分析修正サマリー
+│   ├── CODE_REVIEW_RESPONSE.md  # コードレビューレスポンス
+│   ├── FINAL_ANALYSIS_FIX_REPORT.md # 最終分析修正報告
+│   ├── FRONTEND_BLANK_SCREEN_TROUBLESHOOTING.md # フロントエンド空白画面トラブルシューティング
+│   ├── NextPlan.md              # 次期計画
 │   └── DESIGN_RULE.md           # 設計ルール
 ├── backend/                     # バックエンド（Node.js + Express.js + TypeScript）
 │   ├── src/
@@ -58,16 +79,32 @@ PayPay/
 │   ├── tests/                   # Python テスト
 │   ├── requirements.txt
 │   └── README.md
+├── data/                        # データファイル
+│   ├── paypay_securities_japanese_stocks.csv # 銘柄リストCSV
+│   └── stocks.json              # 銘柄データJSON
+├── postgres/                    # PostgreSQL関連ファイル
+│   ├── init-tables.sql          # テーブル初期化SQL
+│   ├── init.sql/                # 初期化スクリプト
+│   ├── query.sql                # クエリ1
+│   ├── query2.sql               # クエリ2
+│   └── query3.sql               # クエリ3
+├── onetime/                     # 一時的なファイル
+│   ├── test_yfinance_debug.py   # yfinanceデバッグテスト
+│   ├── test_yfinance_fix_integration.py # 統合テスト
+│   ├── test_yfinance_fixed.py   # 修正テスト
+│   ├── test_yfinance.py         # yfinanceテスト
+│   ├── yfinance_diagnosis_1_1_revised.py # 診断スクリプト改訂
+│   ├── yfinance_diagnosis_1_1.py # 診断スクリプト
+│   ├── test_analysis_function.py # 分析機能テスト
+│   ├── test_analysis_request.json # テストリクエストJSON
+│   └── test_trigger.json         # トリガーテストJSON
+├── logs/                        # ログファイル
 ├── .env.example                 # 環境変数テンプレート
 ├── .gitignore
 ├── README.md                    # プロジェクト概要
 ├── 00-project-rule.md           # このファイル
 ├── 01-project-progress.md       # プロジェクト進捗
-├── docs/                        # その他ドキュメント
-├── logs/                        # ログファイル
-├── config/                      # 設定ファイル
-├── data/                        # データファイル
-└── onetime/                     # 一時的なファイル
+└── docs/                        # その他ドキュメント
 
 ## 2. プロジェクト定数・クラス・型ヒント一覧
 
@@ -130,3 +167,51 @@ PayPay/
 - **開発環境**: ローカル実行（Node.js, Python, PostgreSQL）
 - **ステージング環境**: TBD
 - **本番環境**: TBD（Heroku / AWS 検討中）
+
+## 7. 起動方法
+
+### 開発環境起動（推奨）
+
+1. **PostgreSQL の起動確認**
+   ```powershell
+   netstat -ano | Select-String ":5432"
+   ```
+
+2. **バックエンド起動**
+   ```powershell
+   cd backend
+   npm start
+   # http://localhost:3000 でアクセス
+   ```
+
+3. **Python 分析エンジン起動**
+   ```powershell
+   cd analysis
+   .\venv\Scripts\Activate.ps1
+   python -m src.app
+   # http://localhost:5000 でアクセス
+   ```
+
+4. **フロントエンド起動（複数選択肢）**
+   
+   **方法A: 開発サーバー（推奨）**
+   ```powershell
+   cd frontend
+   npm run dev -- --port 5174
+   # http://localhost:5174 でアクセス
+   ```
+   
+   **方法B: ビルド + 静的配信（安定）**
+   ```powershell
+   cd frontend
+   npm run build
+   cd dist
+   python -m http.server 4173
+   # http://localhost:4173 でアクセス
+   ```
+
+### トラブルシューティング
+
+- **フロントエンドが起動しない場合**: 方法B の静的配信を使用
+- **PowerShell バックグラウンド実行が不安定**: 複数ターミナルウィンドウを使用
+- **ポート競合**: 異なるポート番号を指定（例: --port 5175）
