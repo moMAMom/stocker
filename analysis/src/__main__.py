@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def main():
     """メイン関数: Flask アプリケーションを起動"""
     try:
-        from .app import app
+        from src.app import app
         
         port = int(os.getenv('PYTHON_SERVICE_PORT', 5000))
         

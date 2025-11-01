@@ -88,6 +88,11 @@ PayPay/
 │   ├── query.sql                # クエリ1
 │   ├── query2.sql               # クエリ2
 │   └── query3.sql               # クエリ3
+├── docker/                      # Docker関連ファイル
+│   ├── docker-compose.yml       # サービスオーケストレーション
+│   ├── docker-compose.dev.yml   # 開発環境用compose
+│   ├── .dockerignore            # Dockerビルド除外ファイル
+│   └── nginx.conf               # フロントエンド用Nginx設定
 ├── onetime/                     # 一時的なファイル
 │   ├── test_yfinance_debug.py   # yfinanceデバッグテスト
 │   ├── test_yfinance_fix_integration.py # 統合テスト
@@ -164,13 +169,40 @@ PayPay/
 
 ## 6. デプロイメント
 
-- **開発環境**: ローカル実行（Node.js, Python, PostgreSQL）
-- **ステージング環境**: TBD
-- **本番環境**: TBD（Heroku / AWS 検討中）
+- **開発環境**: Docker Compose（推奨）またはローカル実行
+- **ステージング環境**: Docker Compose
+- **本番環境**: Docker ComposeまたはKubernetes
 
 ## 7. 起動方法
 
-### 開発環境起動（推奨）
+### Docker環境起動（推奨）
+
+1. **前提条件確認**
+   - Docker Desktopがインストール・起動していること
+   - docker-composeが利用可能であること
+
+2. **全サービス起動**
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **サービス確認**
+   - フロントエンド: http://localhost:4173
+   - バックエンドAPI: http://localhost:3000
+   - Python分析エンジン: http://localhost:5000
+   - PostgreSQL: localhost:5432
+
+4. **ログ確認**
+   ```bash
+   docker-compose logs -f
+   ```
+
+5. **サービス停止**
+   ```bash
+   docker-compose down
+   ```
+
+### 開発環境起動（従来のローカル実行）
 
 1. **PostgreSQL の起動確認**
    ```powershell
@@ -212,6 +244,9 @@ PayPay/
 
 ### トラブルシューティング
 
+- **Dockerが起動しない場合**: Docker Desktopを再起動
+- **ポート競合**: docker-compose.ymlのポート設定を確認・変更
+- **ビルド失敗**: docker system pruneでキャッシュクリア
 - **フロントエンドが起動しない場合**: 方法B の静的配信を使用
 - **PowerShell バックグラウンド実行が不安定**: 複数ターミナルウィンドウを使用
 - **ポート競合**: 異なるポート番号を指定（例: --port 5175）

@@ -11,11 +11,17 @@ from enum import Enum
 from datetime import datetime, timedelta
 import random
 import os
-from .indicators import TechnicalIndicators
-from .data_fetch import DataFetcher
+from indicators import TechnicalIndicators
+from data_fetch import DataFetcher
 
 # ロギング設定
 logger = logging.getLogger(__name__)
+
+class Signal(Enum):
+    """取引シグナル"""
+    BUY = "BUY"
+    SELL = "SELL"
+    HOLD = "HOLD"
 
 # Development mode with demo data
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
@@ -49,14 +55,6 @@ def generate_demo_analysis(ticker: str) -> Dict:
         },
         "timestamp": datetime.now().isoformat(),
     }
-
-class Signal(Enum):
-    """買い・売りシグナルの種類"""
-
-    BUY = "buy"
-    SELL = "sell"
-    HOLD = "hold"
-    NEUTRAL = "neutral"
 
 class TechnicalAnalyzer:
     """テクニカル分析による買い/売り判定クラス"""

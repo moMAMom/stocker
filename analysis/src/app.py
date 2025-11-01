@@ -9,8 +9,8 @@ import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
-from .analyzer import TechnicalAnalyzer
-from .backtest import Backtester
+from analyzer import TechnicalAnalyzer
+from backtest import Backtester
 import requests
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -318,7 +318,3 @@ def not_found(error):
 def internal_error(error):
     """500エラーハンドラー"""
     return jsonify({"error": "Internal server error"}), 500
-
-if __name__ == "__main__":
-    logger.info(f"Starting Flask analysis engine on port {PYTHON_SERVICE_PORT}")
-    app.run(host="0.0.0.0", port=PYTHON_SERVICE_PORT, debug=False)
