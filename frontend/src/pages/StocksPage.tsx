@@ -32,24 +32,24 @@ import {
   fetchStocksSuccess,
   fetchStocksError,
 } from '../stores/slices/stocksSlice';
+import {
+  setMultipleAnalysisResults,
+} from '../stores/slices/analysisSlice';
 import type { RootState } from '../stores/rootReducer';
 import apiService from '../services/api';
-import type { Stock, AnalysisResult } from '../types';
-
-interface StockWithAnalysis extends Stock {
-  analysis?: AnalysisResult;
-}
 
 const StocksPage: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector(
+  const { items: stocks, loading, error } = useSelector(
     (state: RootState) => state.stocks
+  );
+  const analysisResults = useSelector(
+    (state: RootState) => state.analysis.results
   );
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(50); // 1ページあたりの件数
   const [searchText, setSearchText] = useState('');
-  const [stocksWithAnalysis, setStocksWithAnalysis] = useState<StockWithAnalysis[]>([]);
   const [totalCount, setTotalCount] = useState(0); // API から取得した全銘柄数
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [newStock, setNewStock] = useState({
@@ -88,12 +88,7 @@ const StocksPage: React.FC = () => {
         // 初回ロード時は分析結果を取得しない
         // （全銘柄の分析結果を取得するとレート制限に引っかかる可能性がある）
         // ユーザーが「全銘柄を分析」ボタンを押す時に取得する
-        setStocksWithAnalysis(
-          response.data.map((stock: any) => ({
-            ...stock,
-            analysis: undefined,  // 初期状態では分析結果は未設定
-          }))
-        );
+        // 分析結果はReduxから取得するため、ここでは設定不要
 
       } else {
         dispatch(fetchStocksError(response.error || '不明なエラー'));
@@ -135,7 +130,7 @@ const StocksPage: React.FC = () => {
   };
 
   const handleAnalyzeAll = async () => {
-    if (stocksWithAnalysis.length === 0) {
+    if (stocks.length === 0) {
       alert('分析対象の銘柄がありません');
       return;
     }
@@ -144,7 +139,7 @@ const StocksPage: React.FC = () => {
     analysisStartTimeRef.current = Date.now();
 
     try {
-      const stockIds = stocksWithAnalysis.map(stock => stock.id);
+      const stockIds = stocks.map(stock => stock.id);
       const response = await apiService.triggerAnalysis(stockIds);
       
       if (response.success) {
@@ -158,19 +153,21 @@ const StocksPage: React.FC = () => {
           try {
             // 【改善】全銘柄を順序付けてバッチ処理（3個ずつ、5秒ごと）
             const batchSize = 3; // 1回のポーリングで3個のみ取得
-            const updatedStocks = [...stocksWithAnalysis];
+            const updatedResults: any[] = [];
             
             // 前回ポーリングからの続きを計算
             const currentBatchIndex = (pollingCountRef.current || 0);
-            const batchStartIndex = (currentBatchIndex * batchSize) % stocksWithAnalysis.length;
-            const batchEndIndex = Math.min(batchStartIndex + batchSize, stocksWithAnalysis.length);
+            const batchStartIndex = (currentBatchIndex * batchSize) % stocks.length;
+            const batchEndIndex = Math.min(batchStartIndex + batchSize, stocks.length);
             
             // 現在のバッチのみ取得（逐次実行）
             for (let i = batchStartIndex; i < batchEndIndex; i++) {
               try {
-                const stock = stocksWithAnalysis[i];
+                const stock = stocks[i];
                 const analysisResp = await apiService.getAnalysis(stock.id);
-                updatedStocks[i].analysis = analysisResp.data;
+                if (analysisResp.data) {
+                  updatedResults.push(analysisResp.data);
+                }
               } catch (error) {
                 // エラーでも次に進む
                 console.log(`Stock ${i} analysis failed, continuing...`);
@@ -178,7 +175,11 @@ const StocksPage: React.FC = () => {
             }
             
             pollingCountRef.current = (currentBatchIndex + 1);
-            setStocksWithAnalysis(updatedStocks);
+            
+            // Reduxに分析結果を保存
+            if (updatedResults.length > 0) {
+              dispatch(setMultipleAnalysisResults(updatedResults));
+            }
 
             // ポーリング時間制限チェック
             const elapsedTime = Date.now() - (analysisStartTimeRef.current || Date.now());
@@ -266,7 +267,7 @@ const StocksPage: React.FC = () => {
             variant="contained"
             color="success"
             onClick={handleAnalyzeAll}
-            disabled={isAnalyzing || stocksWithAnalysis.length === 0}
+            disabled={isAnalyzing || stocks.length === 0}
           >
             {isAnalyzing ? '分析中...' : '全銘柄を分析'}
           </Button>
@@ -304,39 +305,42 @@ const StocksPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {stocksWithAnalysis.map((stock) => (
-                <TableRow
-                  key={stock.id}
-                  hover
-                  onClick={() => navigate(`/stocks/${stock.id}`)}
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <TableCell>{stock.symbol}</TableCell>
-                  <TableCell>{stock.name}</TableCell>
-                  <TableCell>{stock.market}</TableCell>
-                  <TableCell>{stock.sector || 'N/A'}</TableCell>
-                  <TableCell>
-                    {stock.analysis ? (
-                      <Chip
-                        label={getSignalLabel(stock.analysis.signal)}
-                        color={getSignalColor(stock.analysis.signal) as any}
-                        size="small"
-                      />
-                    ) : (
-                      <span>未分析</span>
-                    )}
-                  </TableCell>
-                  <TableCell align="right">
-                    {stock.analysis ? `${stock.analysis.score.toFixed(1)}/100` : 'N/A'}
-                  </TableCell>
-                  <TableCell align="right">
-                    {stock.analysis ? `${(stock.analysis.confidence * 100).toFixed(0)}%` : 'N/A'}
-                  </TableCell>
-                  <TableCell align="right">
-                    {stock.analysis ? `¥${stock.analysis.currentPrice.toLocaleString()}` : 'N/A'}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {stocks.map((stock) => {
+                const analysis = analysisResults[stock.id];
+                return (
+                  <TableRow
+                    key={stock.id}
+                    hover
+                    onClick={() => navigate(`/stocks/${stock.id}`)}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <TableCell>{stock.symbol}</TableCell>
+                    <TableCell>{stock.name}</TableCell>
+                    <TableCell>{stock.market}</TableCell>
+                    <TableCell>{stock.sector || 'N/A'}</TableCell>
+                    <TableCell>
+                      {analysis ? (
+                        <Chip
+                          label={getSignalLabel(analysis.signal)}
+                          color={getSignalColor(analysis.signal) as any}
+                          size="small"
+                        />
+                      ) : (
+                        <span>未分析</span>
+                      )}
+                    </TableCell>
+                    <TableCell align="right">
+                      {analysis ? `${analysis.score.toFixed(1)}/100` : 'N/A'}
+                    </TableCell>
+                    <TableCell align="right">
+                      {analysis ? `${(analysis.confidence * 100).toFixed(0)}%` : 'N/A'}
+                    </TableCell>
+                    <TableCell align="right">
+                      {analysis ? `¥${analysis.current_price.toLocaleString()}` : 'N/A'}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
           <TablePagination
